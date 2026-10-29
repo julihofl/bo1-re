@@ -30,6 +30,7 @@ the RW range come from the ELF; everything else an extractor needs (dvar registe
 | `gen_headers.py` | `include/bo1_<target>/*.h`, `include/bo1/{bo1,common}.h` |
 | `match.py` | cross-target function matching (`--transfer` copies curated names/globals) |
 | `validate_db.py` | consistency checks against the ELF |
+| `sprx_path.py` | show/change the SPRX path a patched EBOOT loads at startup (max 39 chars; updates the ELF SHA-1 in the control info). In Git Bash set `MSYS_NO_PATHCONV=1`, or `/dev_hdd0/...` gets rewritten |
 
 ## Rawfiles (optional)
 
