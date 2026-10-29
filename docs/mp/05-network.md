@@ -62,3 +62,10 @@ Demonware hosts: `cod7-ps3-{auth,lobby}.{prod,dev,cert}.demonware.net`,
 `cod7-stun.{us,eu,jp,au}.demonware.net`. Demonware logging goes through `bdLogMessage`
 (`0x8773E8`, 650 calls, channels `info/`, `warn/`, `err/` + `dwNet`, `core/bytebuffer` …),
 which makes the `bd*` classes easy to map by their channel/function strings.
+
+## Remote inspect commands
+
+`0xB41D50`, 8 entries `{name, opd, opd}`: `peek`, `dvar`, `checksum`, `procaddr`, `section`,
+`dir`, `upload`, `mount`; dispatcher `0x650DC0` (`InspectCmd_Dispatch`, guess). Same table as
+in SP/ZM — the analysis and the anti-cheat hypothesis are in
+[../sp_zm/05-network.md](../sp_zm/05-network.md#remote-inspect-commands).

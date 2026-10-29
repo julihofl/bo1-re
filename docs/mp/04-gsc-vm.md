@@ -42,7 +42,7 @@ the error message buffer `0x01EA05C0` (1024 bytes), and a `jmp_buf` stack for th
 
 ## Builtin tables
 
-All in `data/mp/builtins.csv` (1511 rows). Entry layout for script builtins:
+All in `data/mp/builtins.csv` (1519 rows). Entry layout for script builtins:
 `{ const char *name; opd_t *handler; int developer; }` (12 bytes). Name→handler lookup
 functions scan these with `I_stricmp`.
 
@@ -58,6 +58,7 @@ functions scan these with `I_stricmp`.
 | CSC entity methods | `0xB31728` | 29 | `0x15C690` |
 | spawn functions `{classname, fn}` | `0xB34BE0` | 22 | `G_CallSpawn` |
 | UI menu-script commands `{name, fn}` | `0xB3EE84` | 53 | `0x44B130` |
+| remote inspect commands `{name, fn, fn2}` | `0xB41D50` | 8 | `0x650DC0` — see [05-network.md](05-network.md) |
 
 Handlers get automatic names in the symbol ELF: `GScr_<name>`, `PlayerCmd_<name>`,
 `HECmd_<name>`, `ScrCmd_<name>`, `ActorCmd_<name>`, `CScr_<name>`, `CScrCmd_<name>`.

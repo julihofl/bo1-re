@@ -9,19 +9,22 @@ from pathlib import Path
 import ppcscan
 from nids import nid
 
+import target as targets
+
 ROOT = Path(__file__).resolve().parent.parent
-TEXT = (0x10230, 0x8C37EC)
-STUB = (0x8C3810, 0x8C7DD8)
-WRITABLE = (0xB30000, 0xB30000 + 0x1C79798)
 CONF = {"confirmed", "likely", "guess"}
 
 
-def main(target="mp"):
-    idx = ppcscan.load(target)
+def main(target=None):
+    t = targets.get(target)
+    idx = ppcscan.load(t.name)
+    TEXT, STUB = t.text, t.stub
+    rw = next(s for s in idx.elf.segments if s.flags & 2)
+    WRITABLE = (rw.vaddr, rw.vaddr + rw.memsz)
     starts = set(idx.funcs)
-    data = ROOT / "data" / target
+    data = t.data_dir
     errors, warnings = [], []
-    rows = lambda f: list(csv.DictReader((data / f).open()))
+    rows = lambda f: list(csv.DictReader((data / f).open())) if (data / f).exists() else []
     hexa = lambda v: int(v, 16)
 
     funcs = rows("functions.csv")
@@ -55,16 +58,16 @@ def main(target="mp"):
         if not (STUB[0] <= hexa(r["stub_code"]) < STUB[1]):
             errors.append(f"imports.csv: {r['name']} stub outside .sceStub.text")
 
-    for f, col in (("commands.csv", "handler"), ("builtins.csv", "handler")):
+    for f, col in (("commands.csv", "handler"), ("builtins.csv", "handler"), ("builtins.csv", "handler2")):
         for r in rows(f):
-            if r[col] and hexa(r[col]) not in starts:
+            if r.get(col) and hexa(r[col]) not in starts:
                 errors.append(f"{f}: {r['name']} handler {r[col]} is not a function start")
 
     for r in rows("dvars.csv"):
         if r["dvar_ptr"] and not (WRITABLE[0] <= hexa(r["dvar_ptr"]) < WRITABLE[1]):
             errors.append(f"dvars.csv: {r['name']} dvar_ptr outside RW segment")
 
-    structs = json.loads((data / "structs.json").read_text())
+    structs = json.loads((data / "structs.json").read_text()) if (data / "structs.json").exists() else {}
     for sname, s in structs.items():
         if sname.startswith("_"):
             continue

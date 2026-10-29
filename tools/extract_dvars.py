@@ -4,23 +4,24 @@ import csv
 import sys
 
 import ppcscan
+import target as targets
 from sim import Sim, s32
 
-# addr -> (type name, gpr arg layout, fpr value count, fpr limit count)
+# type -> (gpr arg layout, fpr value count, fpr limit count); addresses come from target.json.
 # GPR slots after floats are shifted because PPC64 floats also consume a GPR slot.
-REGISTER_FUNCS = {
-    0x4CAAE0: ("bool",   {"value": 4, "flags": 5, "desc": 6}, 0, 0),
-    0x4CA9C0: ("float",  {"flags": 7, "desc": 8}, 1, 2),
-    0x4CA960: ("vec2",   {"flags": 8, "desc": 9}, 2, 2),
-    0x4CA900: ("vec3",   {"flags": 9, "desc": 10}, 3, 2),
-    0x4CA898: ("vec4",   {"flags": 10, "desc": None}, 4, 2),
-    0x4CAA80: ("int",    {"value": 4, "min": 5, "max": 6, "flags": 7, "desc": 8}, 0, 0),
-    0x4CA780: ("enum",   {"enum_list": 4, "value": 5, "flags": 6, "desc": 7}, 0, 0),
-    0x4CA818: ("string", {"value": 4, "flags": 5, "desc": 6}, 0, 0),
-    0x4CA5C8: ("color",  {"flags": 8, "desc": 9}, 4, 0),
-    0x4CAA20: ("int64",  {"value": 4, "min": 5, "max": 6, "flags": 7, "desc": 8}, 0, 0),
-    0x4CA568: ("linear_color_rgb", {"flags": 9, "desc": 10}, 3, 2),
-    0x4CA508: ("color_xyz", {"flags": 9, "desc": 10}, 3, 2),
+LAYOUTS = {
+    "bool":   ({"value": 4, "flags": 5, "desc": 6}, 0, 0),
+    "float":  ({"flags": 7, "desc": 8}, 1, 2),
+    "vec2":   ({"flags": 8, "desc": 9}, 2, 2),
+    "vec3":   ({"flags": 9, "desc": 10}, 3, 2),
+    "vec4":   ({"flags": 10, "desc": None}, 4, 2),
+    "int":    ({"value": 4, "min": 5, "max": 6, "flags": 7, "desc": 8}, 0, 0),
+    "enum":   ({"enum_list": 4, "value": 5, "flags": 6, "desc": 7}, 0, 0),
+    "string": ({"value": 4, "flags": 5, "desc": 6}, 0, 0),
+    "color":  ({"flags": 8, "desc": 9}, 4, 0),
+    "int64":  ({"value": 4, "min": 5, "max": 6, "flags": 7, "desc": 8}, 0, 0),
+    "linear_color_rgb": ({"flags": 9, "desc": 10}, 3, 2),
+    "color_xyz": ({"flags": 9, "desc": 10}, 3, 2),
 }
 
 
@@ -29,6 +30,8 @@ def fmt_float(v):
 
 
 def main():
+    t = targets.get()
+    REGISTER_FUNCS = {a: (tn, *LAYOUTS[tn]) for tn, a in t.dvar_register_funcs.items()}
     idx = ppcscan.load()
     sim = Sim(idx)
     elf = idx.elf
@@ -92,7 +95,7 @@ def main():
     rows.sort(key=lambda r: (r["name"].lower(), r["register_site"]))
     fields = ["name", "type", "default", "min", "max", "enum_values", "flags", "dvar_ptr", "description",
               "register_func", "register_site"]
-    out = sys.argv[1] if len(sys.argv) > 1 else "../data/mp/dvars.csv"
+    out = sys.argv[1] if len(sys.argv) > 1 else t.data_dir / "dvars.csv"
     with open(out, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields)
         w.writeheader()

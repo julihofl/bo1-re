@@ -28,7 +28,9 @@ for needle in sys.argv[1:]:
         if off in seen:
             continue
         seen.add(off)
-        va = off + 0x10000 if off < 0xB20000 else off - 0xB20000 + 0xB30000
+        va = next((s.vaddr + off - s.offset for s in elf.segments if s.offset <= off < s.offset + s.filesz), None)
+        if va is None:
+            continue
         fns = sorted({idx.func_of(s) for s in idx.refs.get(va, [])})
         if not fns:
             continue

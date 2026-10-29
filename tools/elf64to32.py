@@ -91,9 +91,11 @@ def main() -> None:
         out = convert(f.read())
     if args.symbols:
         import ppcscan
+        import target as targets
         from symelf import add_symbols
-        syms = list(collect_symbols(Path(args.symbols), ppcscan.load().funcs))
-        out = add_symbols(out, syms)
+        t = targets.get(Path(args.symbols).name)
+        syms = list(collect_symbols(t.data_dir, ppcscan.load(t.name).funcs))
+        out = add_symbols(out, syms, t.sections)
         print(f"added {len(syms)} symbols")
     with open(args.elf32, "wb") as f:
         f.write(out)

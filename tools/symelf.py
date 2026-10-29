@@ -7,20 +7,12 @@ fixes that and carries the database names into any ELF-aware tool.
 """
 import struct
 
-# Reconstructed section names by index; "?" marks names inferred from content only.
-SECTION_NAMES = {
-    1: ".init", 2: ".text", 3: ".fini", 4: ".sceStub.text", 5: ".rodata.sceResident",
-    6: ".rodata.sceFNID", 7: ".lib.ent.top", 8: ".lib.ent.btm", 9: ".lib.stub.top", 10: ".lib.stub",
-    11: ".lib.stub.btm", 12: ".rodata", 13: ".rodata.guid?", 14: ".spu_image?", 15: ".sys_proc_param",
-    16: ".sys_proc_prx_param", 17: ".ctors", 18: ".dtors", 19: ".ctors_end?", 20: ".data.rel.ro?",
-    21: ".data.sceFStub", 22: ".opd", 23: ".toc", 24: ".tdata", 25: ".tbss", 26: ".data", 27: ".bss",
-    28: ".unk28", 29: ".comment?", 30: ".shstrtab_zeroed",
-}
 STT_OBJECT, STT_FUNC, STB_GLOBAL = 1, 2, 1
 
 
-def add_symbols(img: bytes, symbols) -> bytes:
-    """symbols: iterable of (name, value, size, kind) with kind in {"func", "object"}."""
+def add_symbols(img: bytes, symbols, section_names) -> bytes:
+    """symbols: iterable of (name, value, size, kind) with kind in {"func", "object"};
+    section_names: reconstructed name per section index (target.json)."""
     d = bytearray(img)
     shoff, = struct.unpack(">I", d[32:36])
     shnum, shstrndx = struct.unpack(">HH", d[48:52])
@@ -40,9 +32,9 @@ def add_symbols(img: bytes, symbols) -> bytes:
 
     shstr = bytearray(b"\0")
     for i, h in enumerate(shdrs):
-        if i in SECTION_NAMES:
+        if i and i < len(section_names) and section_names[i]:
             h[0] = len(shstr)
-            shstr += SECTION_NAMES[i].encode() + b"\0"
+            shstr += section_names[i].encode() + b"\0"
 
     def new_name(n):
         nonlocal shstr

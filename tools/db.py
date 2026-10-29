@@ -10,6 +10,7 @@ import csv
 from pathlib import Path
 
 import ppcscan
+import target as targets
 
 ROOT = Path(__file__).resolve().parent.parent
 FUNC_FIELDS = ["addr", "opd", "name", "prototype", "subsystem", "confidence", "notes"]
@@ -32,8 +33,9 @@ def _save(path, fields, rows):
 
 
 class Db:
-    def __init__(self, target="mp"):
-        self.dir = ROOT / "data" / target
+    def __init__(self, target=None):
+        self.target = targets.get(target).name
+        self.dir = targets.get(target).data_dir
         self.fpath, self.gpath = self.dir / "functions.csv", self.dir / "globals.csv"
         self.funcs = _load(self.fpath, FUNC_FIELDS)
         self.globs = _load(self.gpath, GLOB_FIELDS)
@@ -41,7 +43,7 @@ class Db:
 
     def opd_of(self, addr):
         if self._opd is None:
-            self._opd = ppcscan.load().opd
+            self._opd = ppcscan.load(self.target).opd
         o = self._opd.get(addr)
         return f"0x{o:08X}" if o else ""
 
@@ -77,7 +79,7 @@ def main():
     ap.add_argument("--sys", default="")
     ap.add_argument("--conf", default="likely")
     ap.add_argument("--notes", default="")
-    ap.add_argument("--target", default="mp")
+    ap.add_argument("--target", default=None, help="default: $BO1_TARGET or mp")
     a = ap.parse_args()
     db = Db(a.target)
     if a.kind == "bulk":

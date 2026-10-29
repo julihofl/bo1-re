@@ -42,7 +42,7 @@ For both PT_LOADs `vaddr = file_offset + 0x10000`.
 
 Everything outside PT_LOAD (`.shstrtab`, `.comment`, …) is **all zeroes** — the image was
 rebuilt from a decrypted retail SELF. There are no section names and no symbols; the names
-in [01-memory-map.md](01-memory-map.md) are reconstructed from type, flags, PRX_PARAM
+in [mp/01-memory-map.md](mp/01-memory-map.md) and [sp_zm/01-memory-map.md](sp_zm/01-memory-map.md) are reconstructed from type, flags, PRX_PARAM
 pointers and content (names with `?` are content-based guesses).
 
 ### PROC_PARAM (`0xB2AC00`)

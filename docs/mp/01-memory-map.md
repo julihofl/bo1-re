@@ -32,7 +32,7 @@ Names are reconstructed (the original `.shstrtab` is zeroed). `?` = inferred fro
 
 ## Important globals
 
-All in `.bss` unless noted. Full list: [`data/mp/globals.csv`](../data/mp/globals.csv).
+All in `.bss` unless noted. Full list: [`data/mp/globals.csv`](../../data/mp/globals.csv).
 
 | Address | Name | Notes |
 |---|---|---|

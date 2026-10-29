@@ -4,18 +4,19 @@ import csv
 import sys
 
 import ppcscan
+import target as targets
 from sim import Sim
-
-CMD_ADD_COMMAND = 0x39B280
-CMD_ADD_SERVER_COMMAND = 0x3998B8
-# Server commands are also added to the client list with this empty stub as handler.
-CMD_STUB = 0x3996D8
 
 
 def main():
+    t = targets.get()
+    CMD_ADD_COMMAND = t.anchor("Cmd_AddCommand")
+    CMD_ADD_SERVER_COMMAND = t.anchor("Cmd_AddServerCommand")
+    # Server commands are also added to the client list with this empty stub as handler.
+    CMD_STUB = t.anchor("Cmd_ServerCommandStub")
     idx = ppcscan.load()
     elf = idx.elf
-    kinds = {s: "server" for s in idx.calls[CMD_ADD_SERVER_COMMAND]}
+    kinds = {s: "server" for s in idx.calls.get(CMD_ADD_SERVER_COMMAND, [])}
     kinds.update({s: "client" for s in idx.calls[CMD_ADD_COMMAND]})
     states = Sim(idx).states_at(list(kinds))
     rows = []
@@ -34,7 +35,7 @@ def main():
                      "register_site": f"0x{site:08X}",
                      "register_func": f"0x{idx.func_of(site):08X}"})
     rows.sort(key=lambda r: (r["name"].lower(), r["kind"], r["register_site"]))
-    out = sys.argv[1] if len(sys.argv) > 1 else "../data/mp/commands.csv"
+    out = sys.argv[1] if len(sys.argv) > 1 else t.data_dir / "commands.csv"
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=rows[0].keys())
         w.writeheader()

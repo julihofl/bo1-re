@@ -1,4 +1,5 @@
 addr,opd,name,prototype,subsystem,confidence,notes
+0x00041C94,,sscanf,"int sscanf(const char *s, const char *fmt, ...)",libc,likely,"wraps the vscanf core; used with ""%x"" by the inspect commands"
 0x00043D48,,atof,double atof(const char *s),libc,guess,getdvarfloat converts string value
 0x00044824,,strtol,"long strtol(const char *s, char **end, int base)",libc,likely,"getdvarint: (str, NULL, 10)"
 0x00046390,,I_stricmp,"int I_stricmp(const char *s0, const char *s1)",common,likely,command/builtin/dvar name compares (case-insensitive lookups)
@@ -45,6 +46,7 @@ addr,opd,name,prototype,subsystem,confidence,notes
 0x003B0008,,MSG_ReadBits,"int MSG_ReadBits(msg_t *msg, unsigned int bits)",net,guess,87 callers from CL_ParseServerMessage
 0x003C8660,,Netchan_Transmit,"bool Netchan_Transmit(netchan_t *chan, int length, const char *data)",net,likely,"""Netchan_Transmit: length = %i"""
 0x003D2B20,,Sys_Sleep,void Sys_Sleep(int msec),sys,guess,spin-wait in dvar locks with 0x32
+0x003D2C40,,Sys_GetValue,void *Sys_GetValue(int valueIndex),common,likely,thread-local value slots via r13 (TLS -0x6E94); index 4 = tokenized command args (argc at +0x21 words)
 0x003E1F68,,SV_GetChallenge,void SV_GetChallenge(netadr_t from),server,likely,"""challengeResponse %i"""
 0x003E61F8,,SV_DirectConnect,void SV_DirectConnect(netadr_t from),server,guess,"sends ""connectResponse"""
 0x003E88B8,,SV_GetGuid,int SV_GetGuid(int clientNum),server,guess,getguid() method
@@ -100,6 +102,7 @@ addr,opd,name,prototype,subsystem,confidence,notes
 0x005DF630,,Scr_AddFloat,"void Scr_AddFloat(float value, scriptInstance_t inst)",gsc,confirmed,tail of getdvarfloat/distance/abs
 0x005DF800,,Scr_AddEntity,void Scr_AddEntity(gentity_t *ent),gsc,confirmed,tail of getent; per element in getentarray
 0x0060EB80,,Actor_GetMethod,BuiltinMethod Actor_GetMethod(const char **pName),gsc,likely,scans actor methods (0xB40390)
+0x00650DC0,,InspectCmd_Dispatch,void InspectCmd_Dispatch(int controller),net,guess,looks up remote_inspect_commands (peek/checksum/procaddr/section/dvar/dir/upload/mount) by name; per-controller online frame
 0x007458D8,,Material_RegisterHandle,"Material *Material_RegisterHandle(const char *name, int imageTrack)",render,confirmed,"""white"" in UI and CG asset setup; 206 call sites with material names"
 0x00754410,,R_AddCmdDrawText,"void R_AddCmdDrawText(const char *text, int maxChars, Font_s *font, float x, float y, float xScale, float yScale, float rotation, const float *color, int style)",render,likely,"r4=0x7FFFFFFF at 26 sites, f3/f4=1.0 scale, f5=0 rotation; color/style on stack"
 0x008773E8,,bdLogMessage,"void bdLogMessage(int type, const char *baseChannel, const char *channel, const char *file, const char *function, int line, const char *format, ...)",demonware,likely,"(""info/""|""warn/""|""err/"", ""dwNet""...) 650 calls"

@@ -9,17 +9,17 @@ import struct
 from collections import defaultdict
 from pathlib import Path
 
+import target as targets
 from ppcsim import step
 from ps3elf import Ps3Elf
 
-TEXT_START, TEXT_END = 0x10230, 0x8C37EC
-OPD_START, OPD_END = 0xB461D0, 0xB4F6E8
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = targets.ROOT
 
 
 class Index:
-    def __init__(self, elf: Ps3Elf):
+    def __init__(self, elf: Ps3Elf, target: targets.Target):
         self.elf = elf
+        self.target = target.name
         self.opd = {}         # func addr -> opd addr
         self.refs = defaultdict(list)   # target -> [insn addr]
         self.calls = defaultdict(list)  # callee -> [callsite]
@@ -27,7 +27,9 @@ class Index:
 
     def build(self):
         e = self.elf
-        for opd, func, _ in e.opd_entries(OPD_START, OPD_END):
+        t = targets.get(self.target)
+        TEXT_START, TEXT_END = t.text
+        for opd, func, _ in e.opd_entries(*t.opd):
             self.opd[func] = opd
         starts = set(self.opd)
         code = e.read(TEXT_START, TEXT_END - TEXT_START)
@@ -42,7 +44,7 @@ class Index:
                 tgt = (pc + li) & 0xFFFFFFFF
                 self.calls[tgt].append(pc)
                 starts.add(tgt)
-        extra = ROOT / "data/mp/ghidra_functions.txt"
+        extra = t.data_dir / "ghidra_functions.txt"
         if extra.exists():
             starts.update(int(l, 16) for l in extra.read_text().split() if l.startswith("0x"))
         self.funcs = sorted(s for s in starts if TEXT_START <= s < TEXT_END)
@@ -66,14 +68,16 @@ class Index:
         return struct.unpack(f">{count}I", self.elf.read(start, count * 4))
 
 
-def load(target: str = "mp") -> Index:
-    elf_path = ROOT / f"build/EBOOT_{target.upper()}.elf"
-    cp = ROOT / f"build/index_{target}.pkl"
-    if cp.exists() and cp.stat().st_mtime > elf_path.stat().st_mtime and all(cp.stat().st_mtime > (Path(__file__).parent / m).stat().st_mtime for m in ('ppcscan.py', 'ppcsim.py', '../data/mp/ghidra_functions.txt')):
+def load(target: str = None) -> Index:
+    t = targets.get(target)
+    cp = ROOT / f"build/index_{t.name}.pkl"
+    deps = [t.elf_path, t.data_dir / "target.json", t.data_dir / "ghidra_functions.txt",
+            Path(__file__).parent / "ppcscan.py", Path(__file__).parent / "ppcsim.py"]
+    if cp.exists() and all(cp.stat().st_mtime > d.stat().st_mtime for d in deps if d.exists()):
         idx = pickle.loads(cp.read_bytes())
-        idx.elf = Ps3Elf(elf_path)
+        idx.elf = Ps3Elf(t.elf_path)
         return idx
-    idx = Index(Ps3Elf(elf_path)).build()
+    idx = Index(Ps3Elf(t.elf_path), t).build()
     elf, idx.elf = idx.elf, None
     cp.write_bytes(pickle.dumps(idx))
     idx.elf = elf

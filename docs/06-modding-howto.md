@@ -1,13 +1,26 @@
 # 06 — Modding how-to
 
-Everything here targets the MP EBOOT TU13. Addresses differ in other versions and in the SP/ZM EBOOT.
+Examples use MP TU13 addresses; the SP/ZM values are in [sp_zm/03-engine-core.md](sp_zm/03-engine-core.md).
+Addresses differ between the two EBOOTs and between title updates.
+
+## Selecting the target
+
+```sh
+gcc ... -Iinclude -DBO1_TARGET_MP      # or -DBO1_TARGET_SP_ZM
+```
+
+`include/bo1/bo1.h` pulls in `include/bo1_<target>/`. Names are the same in both targets
+wherever the function exists in both, so shared code needs no `#ifdef`s; struct field
+offsets differ (`gentity_t.client` is `+0x144` in MP, `+0x13C` in SP/ZM) but the generated
+structs handle that. Check `confidence` per target — SP/ZM entries matched from MP are
+often one step lower.
 
 ## Calling a game function
 
 PPU function pointers are pointers to OPDs. The generated header builds one per function:
 
 ```c
-#include "bo1_mp.h"
+#include "bo1/bo1.h"
 
 BO1_FN(Cbuf_AddText)(0, "fast_restart\n");
 /* expands to ((Cbuf_AddText_t)&bo1_opd_Cbuf_AddText)(...), with
@@ -32,12 +45,13 @@ cheat protection) — fine for local tweaks, wrong for dvars that must be networ
 ## Entities and players
 
 ```c
-gentity_t *ent = (gentity_t *)(BO1_g_entities + clientNum * 0x2F8);
-gclient_t *cl  = *(gclient_t **)((char *)ent + 0x144);
-float *angles  = (float *)((char *)cl + 0x180);     /* ps.viewangles */
+gentity_t *ent = &((gentity_t *)BO1_g_entities)[clientNum];  /* stride 0x2F8 MP, 0x34C SP/ZM */
+gclient_t *cl  = ent->client;                                /* +0x144 MP, +0x13C SP/ZM */
+float *angles  = cl->ps_viewangles;                          /* +0x180 in both */
 ```
 
-`structs.h` contains padded structs with `_Static_assert`s for the confirmed offsets.
+`structs.h` contains padded structs with `_Static_assert`s for the confirmed offsets, so the
+same code is correct for both targets.
 
 ## Server commands to clients
 
@@ -59,5 +73,7 @@ float *angles  = (float *)((char *)cl + 0x180);     /* ps.viewangles */
 ## Checklist before trusting an address
 
 - Check `confidence` in the CSV (`guess` = verify yourself).
-- Check the version string (`online_tu13_mp_`) of the EBOOT you are patching.
+- Check the version string (`online_tu13_mp_` / `online_tu13_sp_`) of the EBOOT you are patching.
+- Code patched by a mod can be read back by the backend-driven inspect commands
+  (`peek`/`checksum`, see [sp_zm/05-network.md](sp_zm/05-network.md#remote-inspect-commands)).
 - Run `tools/validate_db.py` after edits.

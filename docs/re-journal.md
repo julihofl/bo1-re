@@ -1,6 +1,6 @@
 # RE journal — peculiarities and pitfalls
 
-Chronological notes from reversing the MP EBOOT (TU13). Each entry: what happened, why, and
+Chronological notes from reversing the MP and SP/ZM EBOOTs (TU13). Each entry: what happened, why, and
 what to do about it.
 
 ## Container / loading
@@ -52,9 +52,47 @@ what to do about it.
 16. **Tool name clash**: a helper named `dis.py` shadowed Python's `dis` module and broke
     `capstone`'s import chain — renamed to `disasm.py`.
 
+## SP/ZM EBOOT
+
+17. **One EBOOT for campaign and Zombies.** `EBOOT_SP_ZM.BIN` (`online_tu13_sp_`) contains
+    both modes; ZM is selected at runtime (`zombiemode`). Hence one `sp_zm` target, no `zm` folder.
+18. **Section indices shift.** SP/ZM has 32 sections instead of 31: an extra executable
+    section after PRX_PARAM (`0xA222E8`, 0x1CC bytes) issues raw `sc` 0x1E0/0x1E1
+    (`sys_prx_load_module`/`sys_prx_start_module`). Section names therefore live per target in
+    `target.json`; bounds the tools need are read from the ELF section headers.
+19. **Masked-code matching works across EBOOTs.** Masking `bl`/`b` targets, `lis` immediates,
+    TOC-relative displacements and every instruction the scanner resolved to an absolute address
+    makes 5300 functions byte-identical between MP and SP/ZM. Struct offsets are *not* masked,
+    so functions touching `gentity_t`/`gclient_t` fall out of the exact pass — that is wanted.
+20. **Call-graph propagation lies sometimes.** Pairing callees by call-site position mapped
+    MP `Player_GetMethod` onto SP's `Actor_GetMethod` (same shape, both called from the same
+    dispatcher). ~20% of `callee` matches disagree on strings; they are transferred as `guess`, and
+    lookup functions are now seeded from the table they reference.
+21. **Different struct sizes, same code.** `gentity_t` `0x2F8` → `0x34C`, `gclient_t`
+    `0x2A38` → `0x1D30`, `gentity_t.client` `+0x144` → `+0x13C`, `ps.weapon` `u16` → `u8`.
+    The quickest proof is the same tiny builtin (`getplayerangles`) disassembled in both EBOOTs.
+22. **No `Dvar_RegisterInt64` in SP/ZM.** The register wrappers are laid out in the same order
+    as MP, with a gap where int64 would be.
+23. **MP's script-entity/vehicle method table is split in SP/ZM** (291 + 108 entries), and SP/ZM
+    adds sentient (threat bias) and two CSC tables. A data scan for `{name, opd[, x]}` runs found
+    them; matching alone would not have.
+24. **Remote inspect commands in both EBOOTs.** A table `{name, opd, opd}` with `peek`,
+    `checksum`, `procaddr`, `section`, `dvar`, `dir`, `upload`, `mount` — missed in the MP pass
+    because its third word is an OPD, not a developer flag. `peek` takes `%x %x`; the dispatcher
+    runs in the per-controller online frame next to the ban check. Likely backend-driven integrity
+    checks.
+25. **Main-menu terminal is native.** The CIA computer (`dir`, `cat`, `zork`, `doa`, `3arc`…)
+    is a `{name, handler}` table in SP/ZM (`0xA56AD8`).
+26. **A duplicate spawn entry.** `spawn_manager` appears twice in the SP/ZM spawn table.
+
 ## Open questions
 
 - Meaning of dvar flags `0x100`, `0x1000`, `0x2000`; field at `dvar_t+0x48`.
 - `MSG_WriteBits` / `MSG_ReadBits` identification is pattern-based only.
 - Exact size of `level_locals_t`, `MAX_GENTITIES` and the `g_clients` element count.
 - Section 14 (`0x974100`, writable, 1.7 MB) — SPU images? Not analysed.
+- SP/ZM: `G_InitGame` not located (MP anchor string is not referenced the same way);
+  `CL_RegisterFont`, `Netchan_Transmit`, `SV_BuildClientSnapshot`, `G_SetModel`, `SV_GetGuid`
+  not matched yet.
+- Inspect commands: who sends them (Demonware task, server command?) and what `handler2` does.
+- SP/ZM `level_locals_t` ends where `g_entities` begins (`level + 0x585C`) — verify.

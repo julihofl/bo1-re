@@ -3,9 +3,10 @@
 #pragma once
 #include "types.h"
 
-/* Calling a game function from PPU code goes through an OPD {code, toc}.
- * BO1_FN(Name) yields a typed function pointer built from the static descriptor. */
-#define BO1_FN(name) ((name##_t)(const void *)&bo1_opd_##name)
+/* likely: wraps the vscanf core; used with "%x" by the inspect commands */
+#define BO1_ADDR_sscanf 0x00041C94u
+typedef int (*sscanf_t)(const char *s, const char *fmt, ...);
+static const opd_t bo1_opd_sscanf = { 0x00041C94u, BO1_TOC };
 
 /* guess: getdvarfloat converts string value */
 #define BO1_ADDR_atof 0x00043D48u
@@ -239,6 +240,11 @@ static const opd_t bo1_opd_Netchan_Transmit = { 0x003C8660u, BO1_TOC };
 #define BO1_ADDR_Sys_Sleep 0x003D2B20u
 typedef void (*Sys_Sleep_t)(int msec);
 static const opd_t bo1_opd_Sys_Sleep = { 0x003D2B20u, BO1_TOC };
+
+/* likely: thread-local value slots via r13 (TLS -0x6E94); index 4 = tokenized command args (argc at +0x21 words) */
+#define BO1_ADDR_Sys_GetValue 0x003D2C40u
+typedef void * (*Sys_GetValue_t)(int valueIndex);
+static const opd_t bo1_opd_Sys_GetValue = { 0x003D2C40u, BO1_TOC };
 
 /* likely: "challengeResponse %i" */
 #define BO1_ADDR_SV_GetChallenge 0x003E1F68u
@@ -514,6 +520,11 @@ static const opd_t bo1_opd_Scr_AddEntity = { 0x005DF800u, BO1_TOC };
 #define BO1_ADDR_Actor_GetMethod 0x0060EB80u
 typedef BuiltinMethod (*Actor_GetMethod_t)(const char **pName);
 static const opd_t bo1_opd_Actor_GetMethod = { 0x0060EB80u, BO1_TOC };
+
+/* guess: looks up remote_inspect_commands (peek/checksum/procaddr/section/dvar/dir/upload/mount) by name; per-controller online frame */
+#define BO1_ADDR_InspectCmd_Dispatch 0x00650DC0u
+typedef void (*InspectCmd_Dispatch_t)(int controller);
+static const opd_t bo1_opd_InspectCmd_Dispatch = { 0x00650DC0u, BO1_TOC };
 
 /* confirmed: "white" in UI and CG asset setup; 206 call sites with material names */
 #define BO1_ADDR_Material_RegisterHandle 0x007458D8u

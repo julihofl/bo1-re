@@ -16,13 +16,16 @@ A function pointer points to an 8-byte descriptor in `.opd`, not to code:
 typedef struct { uint32_t func; uint32_t toc; } opd_t;   /* PS3 uses 2 words, not 3 */
 ```
 
+Values below are MP; SP/ZM follows the same rules with its own addresses (entry `0xA43AA0`,
+OPDs `0xA43A90`–`0xA4C4B0`, r2 = `0x00A544B0`, 4420 OPDs).
+
 - The entry point (`e_entry = 0xB461E0`) is an OPD.
 - Every callback table (`Cmd_AddCommand` handlers, GSC builtin tables, `.ctors`) stores **OPD
-  addresses** (`0xB46xxx`–`0xB4Fxxx`). `data/mp/*.csv` lists both `handler` (code) and
+  addresses** (`0xB46xxx`–`0xB4Fxxx`). `data/<target>/*.csv` lists both `handler` (code) and
   `handler_opd`.
 - Direct calls (`bl`) go to code and never touch the OPD.
 - Only 4771 of ~15600 functions have an OPD — the others are never address-taken. To call
-  one from a mod, build your own descriptor `{addr, 0x00B576E8}` (`include/bo1_mp/functions.h`
+  one from a mod, build your own descriptor `{addr, 0x00B576E8}` (`include/bo1_<target>/functions.h`
   does this for you).
 
 ## TOC / r2

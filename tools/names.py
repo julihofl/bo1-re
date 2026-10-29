@@ -4,23 +4,25 @@ Curated names (functions.csv, globals.csv, imports.csv) win over names derived
 automatically from handler tables (builtins.csv, commands.csv).
 """
 import csv
-from pathlib import Path
+import target as targets
 
-ROOT = Path(__file__).resolve().parent.parent
 BUILTIN_PREFIX = {
     "gsc_functions": "GScr_", "gsc_methods_player": "PlayerCmd_", "gsc_methods_hudelem": "HECmd_",
     "gsc_methods_scriptent_vehicle": "ScrCmd_", "gsc_methods_actor": "ActorCmd_", "csc_functions": "CScr_",
     "csc_methods": "CScrCmd_", "csc_methods_entity": "CScrEntCmd_", "spawn_functions": "SP_",
     "weapon_spawn_or_field_parsers": "WeapParse_", "ui_menu_script_commands": "UIScript_",
+    "remote_inspect_commands": "InspectCmd_", "terminal_commands": "Terminal_", "gsc_methods_scriptent": "ScrCmd_",
+    "gsc_methods_vehicle": "VehicleCmd_", "gsc_methods_sentient": "SentientCmd_", "csc_methods_player": "CScrPlayerCmd_",
+    "csc_functions_sp": "CScr_",
 }
 
 
 def _rows(target, name):
-    p = ROOT / "data" / target / name
+    p = targets.get(target).data_dir / name
     return csv.DictReader(p.open()) if p.exists() else []
 
 
-def auto_function_names(target: str = "mp") -> dict:
+def auto_function_names(target: str = None) -> dict:
     names = {}
     for r in _rows(target, "commands.csv"):
         if r["handler"]:
@@ -29,10 +31,12 @@ def auto_function_names(target: str = "mp") -> dict:
     for r in _rows(target, "builtins.csv"):
         prefix = BUILTIN_PREFIX.get(r["table"], "NetMsg_")
         names.setdefault(int(r["handler"], 16), f"{prefix}{r['name']}")
+        if r.get("handler2"):
+            names.setdefault(int(r["handler2"], 16), f"{prefix}{r['name']}_2")
     return names
 
 
-def curated_names(target: str = "mp") -> dict:
+def curated_names(target: str = None) -> dict:
     names = {}
     for r in _rows(target, "imports.csv"):
         names[int(r["stub_code"], 16)] = r["name"]
@@ -43,7 +47,7 @@ def curated_names(target: str = "mp") -> dict:
     return names
 
 
-def load_names(target: str = "mp") -> dict:
+def load_names(target: str = None) -> dict:
     names = auto_function_names(target)
     names.update(curated_names(target))
     return names

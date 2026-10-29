@@ -1,39 +1,48 @@
 # bo1-re — Call of Duty: Black Ops (PS3) reverse-engineering database
 
 Addresses, structures, dvars, commands, GSC builtins and notes for building mods for
-**Black Ops 1 on PS3, title update 13 (v1.13)**. Multiplayer EBOOT first; SP/ZM follows
-with the same pipeline.
+**Black Ops 1 on PS3, title update 13 (v1.13)** — both EBOOTs.
 
 | Target | File | SHA-1 | Internal name |
 |---|---|---|---|
-| MP | `EBOOT_MP.BIN` | `77a74cf2a14ac4029538536458fa8ce18d079fe9` | `t5mp_ps3f.self`, build tag `online_tu13_mp_` |
-| SP/ZM | `EBOOT_SP_ZM.BIN` | `94293f3f15bae74978d5801db341d89cf1e88f38` | not analysed yet |
+| `mp` | `EBOOT_MP.BIN` | `77a74cf2a14ac4029538536458fa8ce18d079fe9` | `t5mp_ps3f.self`, build tag `online_tu13_mp_` |
+| `sp_zm` | `EBOOT_SP_ZM.BIN` | `94293f3f15bae74978d5801db341d89cf1e88f38` | `t5_ps3f.self`, build tag `online_tu13_sp_` |
 
-The MP EBOOT is shared by all regions (BLES01031–01035, BLES01105, BLUS30591, NPUB20584).
-The binaries themselves are **not** in this repo (see `.gitignore`); put them in the repo root.
+Campaign and Zombies share one EBOOT, so there is one `sp_zm` target, not two: every address is
+valid in both modes. The EBOOTs are shared by all regions (BLES01031–01035, BLES01105,
+BLUS30591, NPUB20584). The binaries themselves are **not** in this repo (see `.gitignore`);
+put them in the repo root.
 
 ## Layout
 
 ```
-data/mp/            single source of truth (CSV/JSON), see below
-include/bo1_mp/     generated C headers for SPRX/PPU mods (do not edit)
-docs/               write-ups per subsystem + RE journal
-tools/              extraction / analysis pipeline (Python)
+data/<target>/      single source of truth per EBOOT (CSV/JSON), see below
+data/cross/         generated function matches between the targets
+include/bo1/        bo1.h (target switch) + common.h (target-independent types)
+include/bo1_<t>/    generated C headers per target (do not edit)
+docs/               target-independent write-ups, RE journal
+docs/mp/, sp_zm/    per-target memory map, engine core, script VM, network
+tools/              extraction / analysis pipeline (Python), BO1_TARGET=mp|sp_zm
 build/, analysis/   local outputs (ignored)
 ```
 
-### Database (`data/mp/`)
+### Database (`data/<target>/`)
 
-| File | Rows | Content |
-|---|---|---|
-| `functions.csv` | curated | address, game OPD (if any), name, C prototype, subsystem, confidence, evidence |
-| `globals.csv` | curated | address, name, type, size, confidence, evidence |
-| `structs.json` | curated | struct layouts with per-field confidence |
-| `dvars.csv` | 2766 | every static dvar registration: type, default, min/max, enum values, flags, `dvar_t*` global, register site |
-| `commands.csv` | 628 | console commands (client + server lists) with handler and `cmd_function_t` |
-| `builtins.csv` | 1511 | GSC/CSC functions & methods, spawn functions, UI menu-script commands, net message handlers |
-| `imports.csv` | 319 | every PRX import (library, NID, resolved name, stub) — 100% resolved |
-| `ghidra_functions.txt` | 11149 | Ghidra's own function starts (merged into the scanner) |
+| File | MP | SP/ZM | Content |
+|---|---|---|---|
+| `target.json` | | | anchors the extractors need (register functions, tables) + section names |
+| `functions.csv` | 107 | 104 | address, game OPD (if any), name, C prototype, subsystem, confidence, evidence |
+| `globals.csv` | 14 | 10 | address, name, type, size, confidence, evidence |
+| `structs.json` | | | struct layouts with per-field confidence |
+| `dvars.csv` | 2766 | 2582 | every static dvar registration: type, default, min/max, enum values, flags, `dvar_t*` global, register site |
+| `commands.csv` | 628 | 410 | console commands (client + server lists) with handler and `cmd_function_t` |
+| `builtins.csv` | 1519 | 1696 | GSC/CSC functions & methods, spawn functions, UI menu-script commands, net handlers, inspect/terminal commands |
+| `imports.csv` | 319 | 277 | every PRX import (library, NID, resolved name, stub) — 100% resolved |
+| `ghidra_functions.txt` | 11149 | 14888 | Ghidra's own function starts (merged into the scanner) |
+
+`data/cross/mp_sp_zm.csv` (8755 pairs) maps MP functions to SP/ZM ones with the match method
+(`name`, `exact`, `strings`, `callee_exact`, `callee` — strongest first). SP/ZM entries
+transferred from MP say so in their `notes`.
 
 **Confidence** — `confirmed`: proven by string/xref/decompiled behaviour; `likely`: strong
 pattern evidence; `guess`: plausible, verify before relying on it.
@@ -45,17 +54,21 @@ Functions not in `functions.csv` but in `commands.csv`/`builtins.csv` get automa
 
 ```sh
 uv venv .venv && uv pip install --python .venv/bin/python -r tools/requirements.txt
-tools/build.sh        # SELF -> ELF, extract tables, generate headers, validate, symbol ELF
+tools/build.sh        # both targets: SELF -> ELF, extract tables, headers, validate, symbol ELF
+tools/build.sh sp_zm  # one target
 ```
 
-`build/EBOOT_MP.sym.elf32` is an ELF32 with a synthetic `.symtab` carrying every name in
+`build/EBOOT_<T>.sym.elf32` is an ELF32 with a synthetic `.symtab` carrying every name in
 the database. Load it in Ghidra with language **`PowerPC:BE:64:64-32addr`** (or through the
 rea MCP server, see [docs/tooling.md](docs/tooling.md)).
 
 ## Using the headers
 
+Compile with `-Iinclude -DBO1_TARGET_MP` or `-DBO1_TARGET_SP_ZM`. Both targets use the same
+names, so code that only uses names present in both builds for either EBOOT:
+
 ```c
-#include "bo1_mp.h"
+#include "bo1/bo1.h"
 
 void hello(void)
 {
@@ -70,11 +83,15 @@ Read [docs/06-modding-howto.md](docs/06-modding-howto.md) before calling or hook
 ## Docs
 
 - [00 SELF/ELF format](docs/00-self-format.md)
-- [01 Memory map](docs/01-memory-map.md)
 - [02 PPU ABI quirks](docs/02-abi-quirks.md)
-- [03 Engine core](docs/03-engine-core.md) — dvars, commands, game, render
-- [04 GSC/CSC VM](docs/04-gsc-vm.md)
-- [05 Network](docs/05-network.md)
 - [06 Modding how-to](docs/06-modding-howto.md)
 - [Tooling](docs/tooling.md)
 - [RE journal](docs/re-journal.md) — pitfalls and peculiarities hit during the work
+
+| | MP | SP/ZM |
+|---|---|---|
+| 01 Memory map | [mp](docs/mp/01-memory-map.md) | [sp_zm](docs/sp_zm/01-memory-map.md) |
+| 03 Engine core — dvars, commands, game, render | [mp](docs/mp/03-engine-core.md) | [sp_zm](docs/sp_zm/03-engine-core.md) |
+| 04 GSC/CSC VM | [mp](docs/mp/04-gsc-vm.md) | [sp_zm](docs/sp_zm/04-gsc-vm.md) |
+| 05 Network | [mp](docs/mp/05-network.md) | [sp_zm](docs/sp_zm/05-network.md) |
+| 07 Zombies and campaign specifics | | [sp_zm](docs/sp_zm/07-zombies.md) |
