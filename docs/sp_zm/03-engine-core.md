@@ -46,8 +46,14 @@ the int64 one between float and int is missing (no 64-bit dvars outside MP stats
 | `0x468398` | `va` |
 | `0x3B2C30` | `Sys_GetValue(index)` — thread-local slots; index 4 = tokenized command args |
 | `0x282140` | `G_RegisterDvars` |
-| `0x5A2B28` | `G_Spawn` |
-| `0x2FC048` | `G_CallSpawn` (spawn table `0xA35B44`) |
+| `0x3066E0` | `G_Spawn` |
+| `0x2FD098` | `G_CallSpawn()` (spawn vars) |
+| `0x2FC048` | `G_CallSpawnEntity(ent)` (spawn table `0xA35B44`) |
+| `0x2FD9C8` | `G_SpawnEntitiesFromString` |
+| `0x305940` | `G_SetModel` |
+| `0x3249A8` | `G_SpawnTurret` |
+| `0x4C5318` | `SV_SetConfigstring` |
+| `0x4CA4C0` | `SV_AddServerCommand` |
 | `0x306E70` | `G_FreeEntity` (guess) |
 | `0x305650` | `G_ModelIndex` |
 | `0x26CFF8` | `ClientCommand` — unlike MP it also handles `god`/`noclip`/`ufo`/`notarget`/`demigod` inline |
@@ -62,12 +68,21 @@ float *angles  = (float *)((char *)cl + 0x180);          /* same as MP */
 unsigned char weapon = *((unsigned char *)cl + 0x144);   /* MP: unsigned short */
 ```
 
+### Buttons
+
+Same scheme and masks as MP, other offsets: `buttons` `gclient_t+0x1C34`,
+`buttonsSinceLastFrame` `+0x1C1C`, second words `+0x1C38` / `+0x1C20`. SP/ZM has extra
+methods: `sprintbuttonpressed` `0x40000000`, `reloadbuttonpressed` `0x08000000`,
+`gasbuttonpressed` `0x200`, and only `actionslottwobuttonpressed` (`0x20000`, second word).
+
 ## Rendering / UI
 
 | Address | Name |
 |---|---|
 | `0x694420` | `R_AddCmdDrawText` |
+| `0x693BB8` | `AddBaseDrawTextCmd` (see MP doc for the prototype) |
 | `0x685C28` | `Material_RegisterHandle` |
+| `0x685790` | `Material_Register` |
 | `0x53F3B0` | `CG_RegisterGraphics` |
 | `0x3D87E8` | `UI_DrawText` |
 | `0x3DAC10` | `UI_AssetCache` |

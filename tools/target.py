@@ -49,6 +49,11 @@ class Target:
         return [(hexint(s), st, n, hexint(l) if l else None) for s, st, n, l in self.config.get("builtin_tables", [])]
 
     @property
+    def builtin_prefix_ranges(self):
+        """(first entry, last entry, handler name prefix) for sub-blocks of a combined table."""
+        return [(hexint(a), hexint(b), prefix) for a, b, prefix in self.config.get("builtin_prefix_ranges", [])]
+
+    @property
     def dvar_register_funcs(self) -> dict:
         """dvar type -> Dvar_Register<Type> address."""
         return {t: hexint(a) for t, a in self.config.get("dvar_register_funcs", {}).items()}

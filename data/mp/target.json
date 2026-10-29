@@ -157,5 +157,18 @@
    "remote_inspect_commands",
    "0x650DC0"
   ]
+ ],
+ "_builtin_prefix_ranges": "sub-blocks of gsc_methods_scriptent_vehicle, confirmed by the Shark builtin dump (data/gsc_csc_function_dump.txt)",
+ "builtin_prefix_ranges": [
+  [
+   "0xB33918",
+   "0xB33A50",
+   "HeliCmd_"
+  ],
+  [
+   "0xB34674",
+   "0xB34A94",
+   "VehicleCmd_"
+  ]
  ]
 }

@@ -92,11 +92,21 @@ struct gclient_t
     float ps_viewangles[3]; /* +0x180 confirmed */
     char _pad018C[0x256C];
     int weaponOverride; /* +0x26F8 guess */
-    char _pad26FC[0x33C];
+    char _pad26FC[0x200];
+    int buttonsSinceLastFrame; /* +0x28FC confirmed */
+    int buttonsSinceLastFrame2; /* +0x2900 confirmed */
+    char _pad2904[0x10];
+    int buttons; /* +0x2914 confirmed */
+    int buttons2; /* +0x2918 confirmed */
+    char _pad291C[0x11C];
 };
 _Static_assert(offsetof(struct gclient_t, ps_weapon) == 0x144, "gclient_t.ps_weapon");
 _Static_assert(offsetof(struct gclient_t, ps_viewangles) == 0x180, "gclient_t.ps_viewangles");
 _Static_assert(offsetof(struct gclient_t, weaponOverride) == 0x26F8, "gclient_t.weaponOverride");
+_Static_assert(offsetof(struct gclient_t, buttonsSinceLastFrame) == 0x28FC, "gclient_t.buttonsSinceLastFrame");
+_Static_assert(offsetof(struct gclient_t, buttonsSinceLastFrame2) == 0x2900, "gclient_t.buttonsSinceLastFrame2");
+_Static_assert(offsetof(struct gclient_t, buttons) == 0x2914, "gclient_t.buttons");
+_Static_assert(offsetof(struct gclient_t, buttons2) == 0x2918, "gclient_t.buttons2");
 _Static_assert(sizeof(struct gclient_t) == 0x2A38, "sizeof gclient_t");
 
 /* level at 0x1213800 */

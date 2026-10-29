@@ -58,7 +58,7 @@ Addresses: MP TU13. Every entry is in `data/mp/functions.csv` / `globals.csv` wi
 | `0x4000` | 227 | name copied with `CopyString` | code in `Dvar_RegisterNew` |
 
 `data/mp/dvars.csv` has, for each registration: type, default, min/max, enum strings, flags,
-description (mostly empty in retail) and **`dvar_ptr`**: the global where the returned
+description (none in the PS3 EBOOT — filled from an Xbox 360 dvar dump, `data/dvar_description_x360.txt`) and **`dvar_ptr`**: the global where the returned
 `dvar_t*` is stored (2657 of 2766 recovered). Some names are registered more than once by
 different modules (e.g. `sv_cheats` in SV, game and UI code), each with its own pointer.
 
@@ -103,22 +103,61 @@ printing compiled out (see the journal).
 | `0x013950C8` | `g_clients`, `gclient_t` = `0x2A38` bytes |
 | `0x2EEC80` | `G_InitGame` |
 | `0x2ECBF0` | `G_RegisterDvars` |
-| `0x5B90F8` | `G_Spawn` |
-| `0x356BE0` | `G_CallSpawn` (table `spawn_functions`) |
+| `0x373488` | `G_Spawn` |
+| `0x356DF0` | `G_CallSpawn()` — reads `classname` from the level spawn vars |
+| `0x356BE0` | `G_CallSpawnEntity(ent)` — `ent->classname` in table `spawn_functions` |
+| `0x357500` | `G_SpawnEntitiesFromString` |
 | `0x371DB0` | `G_FreeEntity` |
-| `0x316A00` | `G_SetModel` |
+| `0x3701D8` | `G_SetModel` |
 | `0x36FFA0` | `G_ModelIndex` |
-| `0x370238` | `G_FindConfigstringIndex` |
+| `0x3705D0` | `G_MaterialIndex` |
+| `0x370238` | `G_FindConfigstringIndex` (listed as `HudElem_Alloc` on forums — wrong) |
+| `0x37FE50` | `G_SpawnTurret` |
+| `0x2D4BA0` | `G_Say(ent, target, mode, text)` — mode 0 = all, 1 = team |
+| `0x2D85E0` | `player_die` |
 | `0x3E95F0` | `SV_GameSendServerCommand(clientNum, type, text)` — `-1` = all clients |
+| `0x3EED08` | `SV_AddServerCommand` |
+| `0x3EAD98` | `SV_SetConfigstring` |
+| `0x3E47B8` | `SV_ClientCommand` |
+| `0x3F62A8` | `SV_SendClientSnapshot` |
+| `0x3DFD90` | `SV_KickClient` |
+| `0x3E7528` | `SV_AddTestClient` |
+
+More forum-sourced names are in `functions.csv` with confidence `guess` and note `forum list`.
 
 `gclient_t`: `ps.viewangles` at `+0x180` (confirmed via `getplayerangles`), current weapon
 index (u16) at `+0x144`.
+
+### Buttons
+
+The `*buttonpressed` player methods test `(buttons | buttonsSinceLastFrame) & mask`:
+`gclient_t+0x2914` `buttons`, `+0x28FC` `buttonsSinceLastFrame`, and a second word right after
+each (`+0x2918` / `+0x2900`) for the action slots and seat change.
+
+| Bit | Mask | Builtin |
+|---|---|---|
+| 0 | `0x80000000` | `attackbuttonpressed` (sign test) |
+| 2 | `0x20000000` | `meleebuttonpressed` |
+| 3 | `0x10000000` | `usebuttonpressed` (also accepts `0x04000000` in `buttons`) |
+| 10 | `0x00200000` | `jumpbuttonpressed` |
+| 11 | `0x00100000` | `adsbuttonpressed` |
+| 14 | `0x00020000` | `fragbuttonpressed` |
+| 15 | `0x00010000` | `secondaryoffhandbuttonpressed` |
+| 24 | `0x00000080` | `throwbuttonpressed` |
+| 28 | `0x00000008` | `changeseatbuttonpressed` (first word) |
+| — | `0x40000` / `0x20000` / `0x10000` / `0x8000` | action slot 1–4 (second word) |
+
+Forum snippets that read a `u32` at `gclient + 0x271` and compare with composite constants are
+wrong; read the fields above and test single bits.
 
 ## Rendering / UI
 
 | Address | Function |
 |---|---|
 | `0x754410` | `R_AddCmdDrawText(text, maxChars, font, x, y, xScale, yScale, rotation, color, style)` |
+| `0x7538E8` | `AddBaseDrawTextCmd(text, maxChars, font, x, y, w, xScale, yScale, rotation, color, style, cursorPos, cursor)` — returns the command the `*WithEffects` variants (`0x753B78`, `0x753CD8`, `0x753E48`, `0x754108`) fill in |
+| `0x751940` | `R_AddCmdDrawStretchPic(x, y, w, h, s0, t0, s1, t1, color, material)` (guess) |
+| `0x745440` | `Material_Register(name, imageTrack)` — `DB_FindXAssetHeader(6, name)` |
 | `0x1C5FA0` | `CL_RegisterFont(name, imageTrack)` — fonts: `fonts/normalfont`, `fonts/bigfont`, `fonts/smallfont`, `fonts/boldfont`, `fonts/consolefont`, `fonts/extrabigfont`, `fonts/objectivefont`, `fonts/smallDevFont`, `fonts/bigDevFont` |
 | `0x7458D8` | `Material_RegisterHandle(name, imageTrack)` (e.g. `"white"`) |
 | `0x430770` | `UI_AssetCache` |

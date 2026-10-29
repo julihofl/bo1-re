@@ -92,11 +92,21 @@ struct gclient_t
     float ps_viewangles[3]; /* +0x180 confirmed */
     char _pad018C[0x18C4];
     unsigned char weaponFallback; /* +0x1A50 guess */
-    char _pad1A51[0x2DF];
+    char _pad1A51[0x1CB];
+    int buttonsSinceLastFrame; /* +0x1C1C confirmed */
+    int buttonsSinceLastFrame2; /* +0x1C20 confirmed */
+    char _pad1C24[0x10];
+    int buttons; /* +0x1C34 confirmed */
+    int buttons2; /* +0x1C38 confirmed */
+    char _pad1C3C[0xF4];
 };
 _Static_assert(offsetof(struct gclient_t, ps_weapon) == 0x144, "gclient_t.ps_weapon");
 _Static_assert(offsetof(struct gclient_t, ps_viewangles) == 0x180, "gclient_t.ps_viewangles");
 _Static_assert(offsetof(struct gclient_t, weaponFallback) == 0x1A50, "gclient_t.weaponFallback");
+_Static_assert(offsetof(struct gclient_t, buttonsSinceLastFrame) == 0x1C1C, "gclient_t.buttonsSinceLastFrame");
+_Static_assert(offsetof(struct gclient_t, buttonsSinceLastFrame2) == 0x1C20, "gclient_t.buttonsSinceLastFrame2");
+_Static_assert(offsetof(struct gclient_t, buttons) == 0x1C34, "gclient_t.buttons");
+_Static_assert(offsetof(struct gclient_t, buttons2) == 0x1C38, "gclient_t.buttons2");
 _Static_assert(sizeof(struct gclient_t) == 0x1D30, "sizeof gclient_t");
 
 /* level.clients at +0 (lwz 0x2800(lis 0xFA)); g_entities follows at level+0x585C */

@@ -28,8 +28,10 @@ def auto_function_names(target: str = None) -> dict:
         if r["handler"]:
             prefix = "SV_Cmd_" if r["kind"] == "server" else "Cmd_"
             names.setdefault(int(r["handler"], 16), f"{prefix}{r['name'].replace('+', 'plus_').replace('-', 'minus_')}_f")
+    ranges = targets.get(target).builtin_prefix_ranges
     for r in _rows(target, "builtins.csv"):
-        prefix = BUILTIN_PREFIX.get(r["table"], "NetMsg_")
+        entry = int(r["entry"], 16)
+        prefix = next((p for a, b, p in ranges if a <= entry <= b), BUILTIN_PREFIX.get(r["table"], "NetMsg_"))
         names.setdefault(int(r["handler"], 16), f"{prefix}{r['name']}")
         if r.get("handler2"):
             names.setdefault(int(r["handler2"], 16), f"{prefix}{r['name']}_2")

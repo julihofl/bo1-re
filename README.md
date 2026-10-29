@@ -34,7 +34,7 @@ build/, analysis/   local outputs (ignored)
 | `functions.csv` | 107 | 104 | address, game OPD (if any), name, C prototype, subsystem, confidence, evidence |
 | `globals.csv` | 14 | 10 | address, name, type, size, confidence, evidence |
 | `structs.json` | | | struct layouts with per-field confidence |
-| `dvars.csv` | 2766 | 2582 | every static dvar registration: type, default, min/max, enum values, flags, `dvar_t*` global, register site |
+| `dvars.csv` | 2766 | 2582 | every static dvar registration: type, default, min/max, enum values, flags, `dvar_t*` global, register site; descriptions from an Xbox 360 dump (2368 / 1985 matched by name) |
 | `commands.csv` | 628 | 410 | console commands (client + server lists) with handler and `cmd_function_t` |
 | `builtins.csv` | 1519 | 1696 | GSC/CSC functions & methods, spawn functions, UI menu-script commands, net handlers, inspect/terminal commands |
 | `imports.csv` | 319 | 277 | every PRX import (library, NID, resolved name, stub) — 100% resolved |

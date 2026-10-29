@@ -52,11 +52,16 @@ functions scan these with `I_stricmp`.
 | GSC player methods | `0xB32C2C` | 166 | `Player_GetMethod` `0x2C3228` |
 | GSC hudelem methods | `0xB33440` | 26 | `HudElem_GetMethod` `0x2DEE70` |
 | GSC script-entity/vehicle methods | `0xB33918` | 374 | `ScriptEnt_GetMethod` `0x307668` |
+
+The script-entity/vehicle table is made of blocks: helicopter `0xB33918`–`0xB33A50` (27, `HeliCmd_`),
+generic script-entity methods, then vehicle `0xB34674`–`0xB34A94` (89, `VehicleCmd_`). All
+1324 builtins of the community dump `data/gsc_csc_function_dump.txt` (Shark) match
+`builtins.csv` entry for entry.
 | GSC actor methods | `0xB40390` | 79 | `Actor_GetMethod` `0x60EB80` |
 | CSC functions | `0xB5A2F4` | 184 | `CScr_GetFunction` `0x144AC0` |
 | CSC methods | `0xB311D8` | 112 | `CScr_GetMethod` `0x1448B0` |
 | CSC entity methods | `0xB31728` | 29 | `0x15C690` |
-| spawn functions `{classname, fn}` | `0xB34BE0` | 22 | `G_CallSpawn` |
+| spawn functions `{classname, fn}` | `0xB34BE0` | 22 | `G_CallSpawnEntity` |
 | UI menu-script commands `{name, fn}` | `0xB3EE84` | 53 | `0x44B130` |
 | remote inspect commands `{name, fn, fn2}` | `0xB41D50` | 8 | `0x650DC0` — see [05-network.md](05-network.md) |
 

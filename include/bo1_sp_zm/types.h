@@ -13,6 +13,9 @@ typedef struct level_locals_t level_locals_t;
 typedef struct scr_entref_t scr_entref_t;
 typedef struct msg_t msg_t;
 typedef struct Font_s Font_s; /* opaque */
+typedef struct GfxCmdDrawText2D GfxCmdDrawText2D; /* opaque */
 typedef struct Material Material; /* opaque */
+typedef struct WeaponDef WeaponDef; /* opaque */
+typedef struct client_t client_t; /* opaque */
 typedef struct netadr_t netadr_t; /* opaque */
 typedef void (*BuiltinMethod)(scr_entref_t);

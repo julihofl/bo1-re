@@ -4,6 +4,7 @@
 
 #define BO1_TOC 0x00B576E8u
 
+#define BO1_g_hudelems 0x011F2738u /* game_hudelem_t[] (likely) */
 #define BO1_level 0x01213800u /* level_locals_t (confirmed) */
 #define BO1_g_entities 0x012AB290u /* gentity_t[] (confirmed) */
 #define BO1_g_clients 0x013950C8u /* gclient_t[18] (likely) */

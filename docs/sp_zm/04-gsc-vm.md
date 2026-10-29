@@ -39,7 +39,7 @@ in two and adds sentient and CSC tables:
 | CSC functions (SP extras: profile, achievements, dynents, extracam) | `0xA5F69C` | 54 | `0x54A130` |
 | CSC methods | `0xA30BD8` | 114 | `CScr_GetMethod` `0x10E3B0` |
 | CSC player methods | `0xA3E8E8` | 36 | `0x54A130` |
-| spawn functions | `0xA35B44` | 29 | `G_CallSpawn` `0x2FC048` |
+| spawn functions | `0xA35B44` | 29 | `G_CallSpawnEntity` `0x2FC048` |
 | UI menu-script commands | `0xA3DC48` | 64 | `0x3EC718` |
 
 `spawn_manager` appears twice in the spawn table — the first match wins.

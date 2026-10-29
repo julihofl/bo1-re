@@ -57,6 +57,8 @@ same code is correct for both targets.
 
 `SV_GameSendServerCommand(-1, 0, "...")` reaches all clients. The game itself sends
 `va("%c \"%s\"", 'g' /* bold */ or 'f', text)` for `iprintlnbold`/`iprintln`.
+`'8' <name>` unlocks an achievement/trophy (`va("%c %s", '8', name)` in GSC `giveachievement`,
+MP and SP/ZM; names like `SP_WIN_CUBA`, `DLC5_ZOM_FULLY_ARMED`).
 
 ## Hooking
 
@@ -69,6 +71,23 @@ same code is correct for both targets.
    must be the game TOC `0x00B576E8` when you jump back.
 3. Prefer `cmd_function_t` re-use: `Cmd_AddCommand` keeps your static struct — allocate it in
    your SPRX's data, not on the stack.
+
+## RPC from a PC tool (MP, forum technique)
+
+Forum tools call game functions from a PC by installing a small polling stub in code that runs
+every frame:
+
+- **JM variant**: flips the branch at `0x466298` in `UI_DrawDebugOverlay` (`0x465368`, the code
+  behind the well-known FPS toggle `0x40 0x00` / `0x40 0x9A`) so the overlay path enters a stub
+  written at `0x4667B4`.
+- **Pattern variant**: searches `4BFFBE05 4BFFFC9x` from `0x7A21D4`; the hit + `0xC` is
+  `0x7A21E0`, a render function called every frame, which is overwritten by the stub.
+
+Both stubs read arguments from a block at `0x10050000` (outside the EBOOT image; r3–r11 from
+`+0x0`, f1–f9 from `+0x24`, function address at `+0x48` (JM) or `+0x4C`, return value right after it) and call the **raw code address** with
+`mtctr`/`bctrl` — no OPD, the game's TOC stays in r2, which is why game functions work.
+Pass `gentity_t *` as `0x012AB290 + n * 0x2F8` (a common snippet has the typo `0x2F`).
+Patched code is visible to the inspect `checksum` command.
 
 ## Checklist before trusting an address
 

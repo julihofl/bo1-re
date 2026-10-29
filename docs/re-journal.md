@@ -85,6 +85,31 @@ what to do about it.
     is a `{name, handler}` table in SP/ZM (`0xA56AD8`).
 26. **A duplicate spawn entry.** `spawn_manager` appears twice in the SP/ZM spawn table.
 
+## Forum offsets (cross-check)
+
+27. **Forum lists are mostly right but mislabel neighbours.** Checking a pasted MP list against
+    strings and call shapes: `HudElem_Alloc` was `G_FindConfigstringIndex`, `PlayerCmd_SayAll`
+    and `SayTeam` were swapped (the handler passing mode 1 sits under `sayteam` in the table),
+    and "`R_AddCmdDrawText`" was the inner `AddBaseDrawTextCmd`, which takes an extra `w` float
+    and cursor arguments — calling it with the forum prototype shifts every float by one FPR.
+28. **…and caught two of mine.** `G_Spawn` was `0x5B90F8` (inferred from the `spawn()` builtin's
+    call order, `likely`) — the real one references `"G_Spawn: no free entities"`. `G_SetModel`
+    was its caller. The SP/ZM copy inherited the wrong `G_Spawn` through matching. Lesson: an
+    error string beats call-order inference; never mark the latter above `likely`.
+29. **`G_CallSpawn` vs `G_CallSpawnEntity`.** The function that looks up the spawn table reads
+    `ent->classname` (`+0x164`) — that is `G_CallSpawnEntity`; `G_CallSpawn` reads `"classname"`
+    from the level spawn vars.
+30. **Xbox 360 addresses look like PS3 ones.** A dvar dump with `0x837xxxxx` pointers is from the
+    360 (`0x82…`/`0x83…` image base) — useless as addresses, but it carries the dvar descriptions
+    the PS3 build stripped, so they are merged by name.
+
+31. **Second forum batch.** The community GSC/CSC dump matches `builtins.csv` 1:1 (1324 entries),
+    which independently confirms the table extraction; its group names revealed the helicopter
+    and vehicle blocks inside MP's combined method table. The FPS toggle and the JM RPC both patch
+    the branch at `0x466298` in the UI debug overlay; forum button code reads a misaligned `u32`
+    at `gclient+0x271` — the real fields are `+0x2914`/`+0x28FC`. `Dvar_GetBool` takes a
+    `dvar_t *`, not a name (forum prototype wrong); `Dvar_GetString` does take a name.
+
 ## Open questions
 
 - Meaning of dvar flags `0x100`, `0x1000`, `0x2000`; field at `dvar_t+0x48`.
@@ -92,7 +117,9 @@ what to do about it.
 - Exact size of `level_locals_t`, `MAX_GENTITIES` and the `g_clients` element count.
 - Section 14 (`0x974100`, writable, 1.7 MB) — SPU images? Not analysed.
 - SP/ZM: `G_InitGame` not located (MP anchor string is not referenced the same way);
-  `CL_RegisterFont`, `Netchan_Transmit`, `SV_BuildClientSnapshot`, `G_SetModel`, `SV_GetGuid`
+  `CL_RegisterFont`, `Netchan_Transmit`, `SV_BuildClientSnapshot`, `SV_GetGuid`
   not matched yet.
+- Stats: forum offsets `0x2094xxx` (kills, prestige…) lie in MP bss, but the layout comes from
+  `ddl_mp/stats.ddl` in the fastfiles — not verifiable from the EBOOT alone.
 - Inspect commands: who sends them (Demonware task, server command?) and what `handler2` does.
 - SP/ZM `level_locals_t` ends where `g_entities` begins (`level + 0x585C`) — verify.

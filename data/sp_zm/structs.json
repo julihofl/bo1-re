@@ -202,6 +202,34 @@
     "type": "unsigned char",
     "name": "weaponFallback",
     "confidence": "guess"
+   },
+   {
+    "offset": "0x1C1C",
+    "type": "int",
+    "name": "buttonsSinceLastFrame",
+    "confidence": "confirmed",
+    "evidence": "(buttons | buttonsSinceLastFrame) & mask in the *buttonpressed player methods"
+   },
+   {
+    "offset": "0x1C20",
+    "type": "int",
+    "name": "buttonsSinceLastFrame2",
+    "confidence": "confirmed",
+    "evidence": "action-slot word; (buttons | buttonsSinceLastFrame) & mask in the *buttonpressed player methods"
+   },
+   {
+    "offset": "0x1C34",
+    "type": "int",
+    "name": "buttons",
+    "confidence": "confirmed",
+    "evidence": "(buttons | buttonsSinceLastFrame) & mask in the *buttonpressed player methods"
+   },
+   {
+    "offset": "0x1C38",
+    "type": "int",
+    "name": "buttons2",
+    "confidence": "confirmed",
+    "evidence": "action-slot word; (buttons | buttonsSinceLastFrame) & mask in the *buttonpressed player methods"
    }
   ]
  },

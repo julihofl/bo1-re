@@ -39,6 +39,16 @@ static const opd_t bo1_opd_vsnprintf = { 0x000471D4u, BO1_TOC };
 typedef void (*longjmp_t)(jmp_buf env, int val);
 static const opd_t bo1_opd_longjmp = { 0x00048D1Cu, BO1_TOC };
 
+/* guess: matched from mp 0x0007B720 (callee). forum list */
+#define BO1_ADDR_BG_GetPerkIndexForName 0x00073A88u
+typedef unsigned int (*BG_GetPerkIndexForName_t)(const char *perkName);
+static const opd_t bo1_opd_BG_GetPerkIndexForName = { 0x00073A88u, BO1_TOC };
+
+/* guess: matched from mp 0x000C0A98 (exact). forum list */
+#define BO1_ADDR_BG_GetWeaponDef 0x000A4968u
+typedef WeaponDef * (*BG_GetWeaponDef_t)(unsigned int weaponIndex);
+static const opd_t bo1_opd_BG_GetWeaponDef = { 0x000A4968u, BO1_TOC };
+
 /* likely: references the main-menu terminal command table 0xA56AD8 (dir, cat, zork, doa, 3arc ...) */
 #define BO1_ADDR_Terminal_GetCommand 0x000CE720u
 typedef void * (*Terminal_GetCommand_t)(const char *name);
@@ -68,6 +78,12 @@ static const opd_t bo1_opd_Player_GetMethod = { 0x0025A8E0u, BO1_TOC };
 #define BO1_ADDR_ClientCommand 0x0026CFF8u
 typedef void (*ClientCommand_t)(int clientNum);
 static const opd_t bo1_opd_ClientCommand = { 0x0026CFF8u, BO1_TOC };
+
+/* likely: "player_die" */
+#define BO1_ADDR_player_die 0x0026F588u
+#define BO1_GAME_OPD_player_die 0x00A46208u /* the game's own descriptor */
+typedef void (*player_die_t)(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath, int iWeapon, const float *vDir, int hitLoc, int psTimeOffset);
+static const opd_t bo1_opd_player_die = { 0x0026F588u, BO1_TOC };
 
 /* confirmed: references the hudelem method table 0xA3400C */
 #define BO1_ADDR_HudElem_GetMethod 0x00275190u
@@ -104,15 +120,35 @@ static const opd_t bo1_opd_Vehicle_GetMethod = { 0x002DB828u, BO1_TOC };
 typedef gentity_t * (*Scr_GetEntity_t)(unsigned int index);
 static const opd_t bo1_opd_Scr_GetEntity = { 0x002FA5C8u, BO1_TOC };
 
-/* likely: references the spawn function table 0xA35B44 */
-#define BO1_ADDR_G_CallSpawn 0x002FC048u
-typedef int (*G_CallSpawn_t)(gentity_t *ent);
-static const opd_t bo1_opd_G_CallSpawn = { 0x002FC048u, BO1_TOC };
+/* likely: matched from mp 0x00356BE0 (name). ent->classname (+0x164) looked up in spawn_functions (0xB34BE0); weapon_ prefix check */
+#define BO1_ADDR_G_CallSpawnEntity 0x002FC048u
+typedef int (*G_CallSpawnEntity_t)(gentity_t *ent);
+static const opd_t bo1_opd_G_CallSpawnEntity = { 0x002FC048u, BO1_TOC };
+
+/* likely: "classname" from spawn vars, "dyn_", "node_" (same shape as mp 0x00356DF0) */
+#define BO1_ADDR_G_CallSpawn 0x002FD098u
+typedef void (*G_CallSpawn_t)(void);
+static const opd_t bo1_opd_G_CallSpawn = { 0x002FD098u, BO1_TOC };
+
+/* confirmed: "SpawnEntities: no entities" */
+#define BO1_ADDR_G_SpawnEntitiesFromString 0x002FD9C8u
+typedef void (*G_SpawnEntitiesFromString_t)(void);
+static const opd_t bo1_opd_G_SpawnEntitiesFromString = { 0x002FD9C8u, BO1_TOC };
 
 /* confirmed: matched from mp 0x00370238 (strings). "G_FindConfigstringIndex: overflow (%d): '%s'" */
 #define BO1_ADDR_G_FindConfigstringIndex 0x003047B0u
 typedef int (*G_FindConfigstringIndex_t)(const char *name, int start, int max, int create, const char *errormsg);
 static const opd_t bo1_opd_G_FindConfigstringIndex = { 0x003047B0u, BO1_TOC };
+
+/* likely: matched from mp 0x003705D0 (strings). G_FindConfigstringIndex wrapper; forum list */
+#define BO1_ADDR_G_MaterialIndex 0x00304B38u
+typedef int (*G_MaterialIndex_t)(const char *name);
+static const opd_t bo1_opd_G_MaterialIndex = { 0x00304B38u, BO1_TOC };
+
+/* guess: matched from mp 0x00370638 (callee). forum list */
+#define BO1_ADDR_G_LocalizedStringIndex 0x00304BA0u
+typedef int (*G_LocalizedStringIndex_t)(const char *string);
+static const opd_t bo1_opd_G_LocalizedStringIndex = { 0x00304BA0u, BO1_TOC };
 
 /* guess: matched from mp 0x00370950 (exact). randomint */
 #define BO1_ADDR_G_irand 0x00304EE8u
@@ -129,22 +165,47 @@ static const opd_t bo1_opd_G_flrand = { 0x00304F28u, BO1_TOC };
 typedef int (*G_ModelIndex_t)(const char *name);
 static const opd_t bo1_opd_G_ModelIndex = { 0x00305650u, BO1_TOC };
 
+/* likely: calls G_ModelIndex; matched from mp 0x003701D8 */
+#define BO1_ADDR_G_SetModel 0x00305940u
+typedef void (*G_SetModel_t)(gentity_t *ent, const char *modelName);
+static const opd_t bo1_opd_G_SetModel = { 0x00305940u, BO1_TOC };
+
+/* confirmed: "G_Spawn: no free entities" */
+#define BO1_ADDR_G_Spawn 0x003066E0u
+typedef gentity_t * (*G_Spawn_t)(void);
+static const opd_t bo1_opd_G_Spawn = { 0x003066E0u, BO1_TOC };
+
 /* guess: 4 caller pairs agree, similar size */
 #define BO1_ADDR_G_FreeEntity 0x00306E70u
 #define BO1_GAME_OPD_G_FreeEntity 0x00A48028u /* the game's own descriptor */
 typedef void (*G_FreeEntity_t)(gentity_t *ent);
 static const opd_t bo1_opd_G_FreeEntity = { 0x00306E70u, BO1_TOC };
 
+/* guess: matched from mp 0x00375548 (exact). forum list */
+#define BO1_ADDR_G_GetWeaponIndexForName 0x00309E30u
+typedef int (*G_GetWeaponIndexForName_t)(const char *name);
+static const opd_t bo1_opd_G_GetWeaponIndexForName = { 0x00309E30u, BO1_TOC };
+
 /* confirmed: references the sentient/threatbias method table 0xA35F08 (SP/ZM only) */
 #define BO1_ADDR_Sentient_GetMethod 0x00323C08u
 typedef BuiltinMethod (*Sentient_GetMethod_t)(const char **pName);
 static const opd_t bo1_opd_Sentient_GetMethod = { 0x00323C08u, BO1_TOC };
+
+/* confirmed: "Could not load turret '%s'" */
+#define BO1_ADDR_G_SpawnTurret 0x003249A8u
+typedef void (*G_SpawnTurret_t)(gentity_t *self, const char *weaponinfoname);
+static const opd_t bo1_opd_G_SpawnTurret = { 0x003249A8u, BO1_TOC };
 
 /* confirmed: empty client-side handler of every server command */
 #define BO1_ADDR_Cbuf_AddServerText_f 0x003955C0u
 #define BO1_GAME_OPD_Cbuf_AddServerText_f 0x00A48598u /* the game's own descriptor */
 typedef void (*Cbuf_AddServerText_f_t)(void);
 static const opd_t bo1_opd_Cbuf_AddServerText_f = { 0x003955C0u, BO1_TOC };
+
+/* guess: matched from mp 0x003996E8 (exact). forum list */
+#define BO1_ADDR_SV_Cmd_EndTokenizedString 0x003955D0u
+typedef void (*SV_Cmd_EndTokenizedString_t)(void);
+static const opd_t bo1_opd_SV_Cmd_EndTokenizedString = { 0x003955D0u, BO1_TOC };
 
 /* likely: matched from mp 0x00399828 (exact). unlinks from cmd_functions */
 #define BO1_ADDR_Cmd_RemoveCommand 0x00395710u
@@ -165,6 +226,11 @@ static const opd_t bo1_opd_Cbuf_AddText = { 0x00395BA8u, BO1_TOC };
 #define BO1_ADDR_Cmd_AddCommand 0x00397160u
 typedef void (*Cmd_AddCommand_t)(const char *name, void (*function)(void), cmd_function_t *allocedCmd);
 static const opd_t bo1_opd_Cmd_AddCommand = { 0x00397160u, BO1_TOC };
+
+/* guess: matched from mp 0x0039B6C0 (exact). forum list */
+#define BO1_ADDR_SV_Cmd_TokenizeString 0x003975A0u
+typedef void (*SV_Cmd_TokenizeString_t)(const char *text_in);
+static const opd_t bo1_opd_SV_Cmd_TokenizeString = { 0x003975A0u, BO1_TOC };
 
 /* guess: matched from mp 0x003A2B38 (callee). "Can't create dvar..." with code 0; 138 call sites with format strings in r4 */
 #define BO1_ADDR_Com_Error 0x0039E6A8u
@@ -196,6 +262,9 @@ static const opd_t bo1_opd_UI_DrawText = { 0x003D87E8u, BO1_TOC };
 typedef void (*UI_AssetCache_t)(void);
 static const opd_t bo1_opd_UI_AssetCache = { 0x003DAC10u, BO1_TOC };
 
+/* guess: "fps: %f", "ui_showlist: " (as mp 0x00465368) */
+#define BO1_ADDR_UI_DrawDebugOverlay 0x00407150u
+
 /* likely: matched from mp 0x004BC090 (exact). paired with CopyString */
 #define BO1_ADDR_FreeString 0x00448DB8u
 typedef void (*FreeString_t)(const char *s, int unused);
@@ -216,10 +285,20 @@ static const opd_t bo1_opd_Dvar_IsValidName = { 0x00451C20u, BO1_TOC };
 typedef const char * (*Dvar_ValueToString_t)(const dvar_t *dvar, DvarValue value);
 static const opd_t bo1_opd_Dvar_ValueToString = { 0x00451D50u, BO1_TOC };
 
+/* guess: matched from mp 0x004C4FF0 (exact); takes dvar_t* */
+#define BO1_ADDR_Dvar_GetBool 0x00452280u
+typedef bool (*Dvar_GetBool_t)(const dvar_t *dvar);
+static const opd_t bo1_opd_Dvar_GetBool = { 0x00452280u, BO1_TOC };
+
 /* likely: matched from mp 0x004C61C0 (exact). called from Dvar_RegisterNew when an existing dvar changes type/flags */
 #define BO1_ADDR_Dvar_Reregister 0x00453C08u
 typedef void (*Dvar_Reregister_t)(dvar_t *dvar, const char *name, dvarType_t type, unsigned short flags, DvarValue value, DvarLimits domain);
 static const opd_t bo1_opd_Dvar_Reregister = { 0x00453C08u, BO1_TOC };
+
+/* likely: matched from mp 0x004C7370 (callee); same 0x1505 hash lookup and enum check */
+#define BO1_ADDR_Dvar_GetString 0x00454DB8u
+typedef const char * (*Dvar_GetString_t)(const char *dvarName);
+static const opd_t bo1_opd_Dvar_GetString = { 0x00454DB8u, BO1_TOC };
 
 /* likely: matched from mp 0x004C8570 (strings). used to force reset value for cheat/latched dvars */
 #define BO1_ADDR_Dvar_SetVariant 0x00455FB8u
@@ -311,6 +390,12 @@ static const opd_t bo1_opd_va = { 0x00468398u, BO1_TOC };
 typedef void (*I_strncat_t)(char *dest, int size, const char *src);
 static const opd_t bo1_opd_I_strncat = { 0x0046A0A8u, BO1_TOC };
 
+/* confirmed: matched from mp 0x003E0848 (name). fast_restart command handler */
+#define BO1_ADDR_SV_FastRestart_f 0x004BDC78u
+#define BO1_GAME_OPD_SV_FastRestart_f 0x00A49F60u /* the game's own descriptor */
+typedef void (*SV_FastRestart_f_t)(void);
+static const opd_t bo1_opd_SV_FastRestart_f = { 0x004BDC78u, BO1_TOC };
+
 /* likely: matched from mp 0x003E1F68 (strings). "challengeResponse %i" */
 #define BO1_ADDR_SV_GetChallenge 0x004BEEB0u
 typedef void (*SV_GetChallenge_t)(netadr_t from);
@@ -321,6 +406,21 @@ static const opd_t bo1_opd_SV_GetChallenge = { 0x004BEEB0u, BO1_TOC };
 typedef void (*SV_DirectConnect_t)(netadr_t from);
 static const opd_t bo1_opd_SV_DirectConnect = { 0x004C0BC8u, BO1_TOC };
 
+/* guess: "EXE_NEEDSTATS" (as mp 0x003E5200) */
+#define BO1_ADDR_SV_SendClientGameState 0x004C1E78u
+typedef void (*SV_SendClientGameState_t)(client_t *client);
+static const opd_t bo1_opd_SV_SendClientGameState = { 0x004C1E78u, BO1_TOC };
+
+/* likely: "EXE_LOSTRELIABLECOMMANDS" */
+#define BO1_ADDR_SV_ClientCommand 0x004C4060u
+typedef void (*SV_ClientCommand_t)(client_t *cl, msg_t *msg);
+static const opd_t bo1_opd_SV_ClientCommand = { 0x004C4060u, BO1_TOC };
+
+/* confirmed: "SV_SetConfigstring: bad index %i" */
+#define BO1_ADDR_SV_SetConfigstring 0x004C5318u
+typedef void (*SV_SetConfigstring_t)(int index, const char *val);
+static const opd_t bo1_opd_SV_SetConfigstring = { 0x004C5318u, BO1_TOC };
+
 /* likely: statusResponse\n%s\n%s; inlined into SV_ConnectionlessPacket in MP */
 #define BO1_ADDR_SVC_Status 0x004C9D38u
 typedef void (*SVC_Status_t)(netadr_t from);
@@ -330,6 +430,16 @@ static const opd_t bo1_opd_SVC_Status = { 0x004C9D38u, BO1_TOC };
 #define BO1_ADDR_SV_ConnectionlessPacket 0x004C9FE8u
 typedef void (*SV_ConnectionlessPacket_t)(netadr_t from, msg_t *msg);
 static const opd_t bo1_opd_SV_ConnectionlessPacket = { 0x004C9FE8u, BO1_TOC };
+
+/* likely: matched from mp 0x003EED08 (strings). "EXE_SERVERCOMMANDOVERFLOW" */
+#define BO1_ADDR_SV_AddServerCommand 0x004CA4C0u
+typedef void (*SV_AddServerCommand_t)(client_t *client, int type, const char *cmd);
+static const opd_t bo1_opd_SV_AddServerCommand = { 0x004CA4C0u, BO1_TOC };
+
+/* likely: matched from mp 0x003F62A8 (strings). "EXE_SERVERMESSAGEOVERFLOW"; forum list */
+#define BO1_ADDR_SV_SendClientSnapshot 0x004D2928u
+typedef void (*SV_SendClientSnapshot_t)(client_t *client);
+static const opd_t bo1_opd_SV_SendClientSnapshot = { 0x004D2928u, BO1_TOC };
 
 /* likely: 14/15 MP strings shared */
 #define BO1_ADDR_CL_CheckForResend 0x004E3780u
@@ -400,11 +510,6 @@ static const opd_t bo1_opd_MSG_ReadByte = { 0x00558AD0u, BO1_TOC };
 #define BO1_ADDR_MSG_ReadBits 0x00558C10u
 typedef int (*MSG_ReadBits_t)(msg_t *msg, unsigned int bits);
 static const opd_t bo1_opd_MSG_ReadBits = { 0x00558C10u, BO1_TOC };
-
-/* likely: matched from mp 0x005B90F8 (exact). spawn() builtin allocates entity before G_CallSpawn */
-#define BO1_ADDR_G_Spawn 0x005A2B28u
-typedef gentity_t * (*G_Spawn_t)(void);
-static const opd_t bo1_opd_G_Spawn = { 0x005A2B28u, BO1_TOC };
 
 /* likely: matched from mp 0x005CB210 (exact). arg-count checks in getentarray/spawn/iprintlnbold */
 #define BO1_ADDR_Scr_GetNumParam 0x005B5088u
@@ -511,10 +616,40 @@ static const opd_t bo1_opd_Scr_AddEntity = { 0x005C98E8u, BO1_TOC };
 typedef void (*InspectCmd_Dispatch_t)(int controller);
 static const opd_t bo1_opd_InspectCmd_Dispatch = { 0x005F3920u, BO1_TOC };
 
+/* guess: matched from mp 0x00734350 (exact). forum list */
+#define BO1_ADDR_R_RegisterFont 0x006749E8u
+typedef Font_s * (*R_RegisterFont_t)(const char *name, int imageTrack);
+static const opd_t bo1_opd_R_RegisterFont = { 0x006749E8u, BO1_TOC };
+
+/* likely: matched from mp 0x00745440 (exact). DB_FindXAssetHeader(ASSET_TYPE_MATERIAL=6, name); imageTrack unused; Material_RegisterHandle adds the empty-name check */
+#define BO1_ADDR_Material_Register 0x00685790u
+typedef Material * (*Material_Register_t)(const char *name, int imageTrack);
+static const opd_t bo1_opd_Material_Register = { 0x00685790u, BO1_TOC };
+
 /* guess: matched from mp 0x007458D8 (callee). "white" in UI and CG asset setup; 206 call sites with material names */
 #define BO1_ADDR_Material_RegisterHandle 0x00685C28u
 typedef Material * (*Material_RegisterHandle_t)(const char *name, int imageTrack);
 static const opd_t bo1_opd_Material_RegisterHandle = { 0x00685C28u, BO1_TOC };
+
+/* guess: matched from mp 0x00751940 (exact). forum list */
+#define BO1_ADDR_R_AddCmdDrawStretchPic 0x00692140u
+typedef void (*R_AddCmdDrawStretchPic_t)(float x, float y, float w, float h, float s0, float t0, float s1, float t1, const float *color, Material *material);
+static const opd_t bo1_opd_R_AddCmdDrawStretchPic = { 0x00692140u, BO1_TOC };
+
+/* likely: matched from mp 0x007538E8 (exact). shared by R_AddCmdDrawText (w=1.0, cursorPos=-1, cursor=0) and the *WithEffects variants, which fill the returned command; forum lists it as R_AddCmdDrawText with the wrong prototype */
+#define BO1_ADDR_AddBaseDrawTextCmd 0x00693BB8u
+typedef GfxCmdDrawText2D * (*AddBaseDrawTextCmd_t)(const char *text, int maxChars, Font_s *font, float x, float y, float w, float xScale, float yScale, float rotation, const float *color, int style, int cursorPos, char cursor);
+static const opd_t bo1_opd_AddBaseDrawTextCmd = { 0x00693BB8u, BO1_TOC };
+
+/* likely: matched from mp 0x00753CD8 (exact). wraps AddBaseDrawTextCmd; prototype from forum list */
+#define BO1_ADDR_R_AddCmdDrawTextWithRedactEffects 0x00693E48u
+typedef void (*R_AddCmdDrawTextWithRedactEffects_t)(const char *text, int maxChars, Font_s *font, float x, float y, float xScale, float yScale, float rotation, const float *color, int style, const float *glowColor, Material *fxMaterial, Material *fxMaterialGlow, int fxBirthTime, int fxLetterTime, int fxDecayStartTime, int fxDecayDuration, int fxRedactDecayStartTime, int fxRedactDecayDuration);
+static const opd_t bo1_opd_R_AddCmdDrawTextWithRedactEffects = { 0x00693E48u, BO1_TOC };
+
+/* likely: matched from mp 0x00754108 (exact). wraps AddBaseDrawTextCmd; prototype from forum list */
+#define BO1_ADDR_R_AddCmdDrawTextWithEffects 0x00694118u
+typedef void (*R_AddCmdDrawTextWithEffects_t)(const char *text, int maxChars, Font_s *font, float x, float y, float w, float xScale, float yScale, float rotation, const float *color, int style, const float *glowColor, Material *fxMaterial, Material *fxMaterialGlow, int fxBirthTime, int fxLetterTime, int fxDecayStartTime, int fxDecayDuration);
+static const opd_t bo1_opd_R_AddCmdDrawTextWithEffects = { 0x00694118u, BO1_TOC };
 
 /* likely: matched from mp 0x00754410 (exact). r4=0x7FFFFFFF at 26 sites, f3/f4=1.0 scale, f5=0 rotation; color/style on stack */
 #define BO1_ADDR_R_AddCmdDrawText 0x00694420u

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Extract every statically registered dvar (name, type, defaults, limits, flags, dvar_t* global)."""
 import csv
+import re
 import sys
+from pathlib import Path
 
 import ppcscan
 import target as targets
@@ -23,6 +25,27 @@ LAYOUTS = {
     "linear_color_rgb": ({"flags": 9, "desc": 10}, 3, 2),
     "color_xyz": ({"flags": 9, "desc": 10}, 3, 2),
 }
+
+
+# PS3 retail EBOOTs register dvars without descriptions; the texts come from an Xbox 360
+# dvar dump ("0x… - Type: T - name" followed by indented description lines).
+X360_DESCRIPTIONS = Path(__file__).resolve().parent.parent / "data" / "dvar_description_x360.txt"
+X360_HEADER = re.compile(r"^0x[0-9A-Fa-f]+ - Type: \S+ - ([^\s=]*)")
+
+
+def load_x360_descriptions():
+    if not X360_DESCRIPTIONS.exists():
+        return {}
+    descs, name = {}, None
+    for line in X360_DESCRIPTIONS.read_text(errors="replace").splitlines():
+        m = X360_HEADER.match(line)
+        if m:
+            name = m.group(1).lower() or None
+            continue
+        text = " ".join(line.split())
+        if name and text:
+            descs[name] = f"{descs[name]} {text}" if name in descs else text
+    return descs
 
 
 def fmt_float(v):
@@ -91,6 +114,10 @@ def main():
             ptr = sim.stored_result(site, g)
             row["dvar_ptr"] = f"0x{ptr:08X}" if ptr else ""
             rows.append(row)
+
+    x360 = load_x360_descriptions()
+    for row in rows:
+        row["description"] = row["description"] or x360.get(row["name"].lower(), "")
 
     rows.sort(key=lambda r: (r["name"].lower(), r["register_site"]))
     fields = ["name", "type", "default", "min", "max", "enum_values", "flags", "dvar_ptr", "description",
