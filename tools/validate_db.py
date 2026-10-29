@@ -63,6 +63,12 @@ def main(target=None):
             if r.get(col) and hexa(r[col]) not in starts:
                 errors.append(f"{f}: {r['name']} handler {r[col]} is not a function start")
 
+    # Optional files derived from the PC rawfiles (tools/raw_extract.py) must name known builtins.
+    builtin_names = {r["name"].lower() for r in rows("builtins.csv")}
+    for r in rows("builtins_script.csv"):
+        if r["name"] not in builtin_names:
+            errors.append(f"builtins_script.csv: {r['name']} is not in builtins.csv (rerun raw_extract.py builtins)")
+
     for r in rows("dvars.csv"):
         if r["dvar_ptr"] and not (WRITABLE[0] <= hexa(r["dvar_ptr"]) < WRITABLE[1]):
             errors.append(f"dvars.csv: {r['name']} dvar_ptr outside RW segment")

@@ -38,7 +38,8 @@
  "anchors": {
   "Cmd_AddCommand": "0x39B280",
   "Cmd_AddServerCommand": "0x3998B8",
-  "Cmd_ServerCommandStub": "0x3996D8"
+  "Cmd_ServerCommandStub": "0x3996D8",
+  "weapon_def_fields": "0xB579C8"
  },
  "dvar_register_funcs": {
   "bool": "0x4CAAE0",

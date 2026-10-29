@@ -40,6 +40,16 @@ build/, analysis/   local outputs (ignored)
 | `imports.csv` | 319 | 277 | every PRX import (library, NID, resolved name, stub) — 100% resolved |
 | `ghidra_functions.txt` | 11149 | 14888 | Ghidra's own function starts (merged into the scanner) |
 | `stats_ddl.txt` | 1053 | – | stats DDL layout (`ddl_mp/stats.ddl`): byte/bit offset into the DDL data, width, type, array, enum; plus 13 enums. Dumped at runtime on a PS3 running v1.13 (the DDL lives in the fastfiles, not the EBOOT); generated into `include/bo1_mp/stats.h` (buffer layout in `target.json` `stats`) |
+| `weapon_def_fields.csv` | 748 | – | weapon def parse table (`cspField_t {name, offset, type}` at `target.json` `weapon_def_fields`): field offset and parse type (`CSPFT_*`, weapon-specific `WFT_*`); generated into `include/bo1_mp/weapon_fields.h`. SP/ZM: table not located yet |
+| `builtins_script.csv` | 1166 | 1275 | *from the PC rawfiles*: per GSC/CSC builtin the call style (function/method) and argument counts seen in the mod-tools scripts, use count, first use |
+| `script_dvars.csv` | 830 | 431 | *from the PC rawfiles*: dvars named by scripts (`getdvar*`/`setdvar`/…) and menus; `engine` = also in `dvars.csv`, else created by script/menu |
+| `weapon_fields.csv` | 776 | 776 | *from the PC rawfiles*: every key of the `WEAPONFILE` weapon defs with value kind, example, and the matching EBOOT offset/type |
+
+`data/ui_defines.csv` holds the 689 numeric `#define`s of the mod tools' `ui/menudefinition.h`
+(ownerdraw `CG_*`/`UI_*`, `FEEDER_*`, `ITEM_TYPE_*`, …). It is generated into `include/bo1/ui_defines.h`.
+Files marked *from the PC rawfiles* are derived with `tools/raw_extract.py` from the PC mod tools
+(the rawfiles stay local, see [docs/tooling.md](docs/tooling.md#rawfiles-optional)). They are hints for
+the PS3 build, not proof.
 
 `data/cross/mp_sp_zm.csv` (8755 pairs) maps MP functions to SP/ZM ones with the match method
 (`name`, `exact`, `strings`, `callee_exact`, `callee` — strongest first). SP/ZM entries

@@ -5,3 +5,4 @@
 #include "structs.h"
 #include "functions.h"
 #include "stats.h"
+#include "weapon_fields.h"

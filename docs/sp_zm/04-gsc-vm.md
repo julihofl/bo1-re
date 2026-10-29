@@ -43,3 +43,26 @@ in two and adds sentient and CSC tables:
 | UI menu-script commands | `0xA3DC48` | 64 | `0x3EC718` |
 
 `spawn_manager` appears twice in the spawn table — the first match wins.
+
+The SP scripts call `createthreatbiasgroup`, `threatbiasgroupexists`, `getthreatbias` and `setthreatbias`
+as **functions**, although they sit in the sentient table. The remaining entries (`setthreatbiasgroup`,
+`getthreatbiasgroup`, `isnotarget`, …) are used as methods. These four are the table's first entries;
+entries 5–6 (`setthreatbiasagainstall`, `setignoremegroup`) are unused, but other IW engines have
+them as functions too. So either the table at `0xA35F08` serves both lookups, or its first six
+entries are a function block. Not checked in the EBOOT yet.
+
+## Script usage (PC rawfiles)
+
+[`builtins_script.csv`](../../data/sp_zm/builtins_script.csv) (`tools/raw_extract.py builtins`, see the
+[MP doc](../mp/04-gsc-vm.md#script-usage-pc-rawfiles)): 690 of 1275 builtins are used by the SP/ZM scripts the mod
+tools ship (`maps/*`, `aitype/`, `character/`, `codescripts/`, `common_scripts/`). Most campaign
+and zombie level scripts and nearly all CSC are missing from the mod tools, so an unused builtin
+says little here. `maps/_utility.gsc` defines its own `Spawn()`, which shadows the builtin.
+
+## Engine → script callbacks
+
+`maps/_callbacksetup.gsc` (PC rawfiles): `CodeCallback_StartGameType`, `SaveRestored`,
+`PlayerConnect`, `PlayerDisconnect`, `DisconnectedDuringLoad`, `PlayerDamage`, `PlayerKilled`,
+`PlayerLastStand`, `PlayerRevive`, `ActorDamage`, `ActorKilled`, `ActorShouldReact`, `VehicleDamage`,
+`FaceEventNotify`, `GlassSmash`, `LevelNotify`, `MenuMessage`, `Dec20Message`; plus
+`CodeCallback_DestructibleEvent` (`maps/_destructible.gsc`).

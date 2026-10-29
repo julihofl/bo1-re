@@ -19,6 +19,7 @@ for T in ${TARGETS[@]}; do
     $PY extract_dvars.py
     $PY extract_commands.py
     $PY extract_builtins.py
+    $PY extract_weapon_fields.py
     $PY gen_headers.py
     $PY validate_db.py
     $PY elf64to32.py ../build/EBOOT_$U.elf ../build/EBOOT_$U.sym.elf32 --symbols ../data/$T

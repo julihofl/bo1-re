@@ -20,6 +20,8 @@ the RW range come from the ELF; everything else an extractor needs (dvar registe
 | `sim.py` | call-site argument recovery (whole-function forward simulation, snapshot per call site) |
 | `argscan.py` | rank callees by constant string arguments — the main identification heuristic |
 | `extract_dvars.py` / `extract_commands.py` / `extract_builtins.py` | regenerate the big tables |
+| `extract_weapon_fields.py` | weapon def parse table (`cspField_t`) → `weapon_def_fields.csv` |
+| `raw_extract.py` | optional: facts from the PC mod-tools rawfiles (see below) |
 | `overview.py` | per-function summary of an address range (size, callers, callees, strings) |
 | `strxref.py` | substring → strings → referencing functions |
 | `disasm.py` | Capstone disassembly with string/name annotations |
@@ -28,6 +30,27 @@ the RW range come from the ELF; everything else an extractor needs (dvar registe
 | `gen_headers.py` | `include/bo1_<target>/*.h`, `include/bo1/{bo1,common}.h` |
 | `match.py` | cross-target function matching (`--transfer` copies curated names/globals) |
 | `validate_db.py` | consistency checks against the ELF |
+
+## Rawfiles (optional)
+
+The PC mod tools ship the game's `raw/` folder (scripts, menus, weapon files, tables). The rawfiles are
+Activision's and stay out of the repo. `raw_extract.py` derives facts from them into `data/`.
+It is not part of `build.sh`, and every output is rewritten in full on each run:
+
+```sh
+export BO1_RAW="<steam>/steamapps/common/Call of Duty Black Ops/raw"
+BO1_TARGET=mp ../.venv/bin/python raw_extract.py builtins    # data/<t>/builtins_script.csv
+BO1_TARGET=mp ../.venv/bin/python raw_extract.py dvars       # data/<t>/script_dvars.csv
+BO1_TARGET=mp ../.venv/bin/python raw_extract.py weapons     # data/<t>/weapon_fields.csv (run extract_weapon_fields.py first)
+../.venv/bin/python raw_extract.py ui-defines                # data/ui_defines.csv
+BO1_TARGET=mp ../.venv/bin/python raw_extract.py callbacks   # prints CodeCallback_* names
+```
+
+Files under `mp/`, `ui_mp/`, `mptype/`, `mpbody/`, `mphead/` count as MP, everything else as SP/ZM.
+`codescripts/` and `common_scripts/` count for both. The GSC parser is a tokenizer, not a compiler:
+`ent foo()` and `ent thread foo()` are methods, and calls that resolve to a script function (own file or
+`#include`) are skipped. Menu dvar references come from regexes and are approximate. The rawfiles are
+the PC build. Treat everything here as a hint for the PS3 EBOOT and check it there.
 
 ## rea / Ghidra
 
