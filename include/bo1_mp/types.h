@@ -12,6 +12,7 @@ typedef struct gclient_t gclient_t;
 typedef struct level_locals_t level_locals_t;
 typedef struct scr_entref_t scr_entref_t;
 typedef struct msg_t msg_t;
+typedef struct cg_t cg_t;
 typedef struct Font_s Font_s; /* opaque */
 typedef struct GfxCmdDrawText2D GfxCmdDrawText2D; /* opaque */
 typedef struct Material Material; /* opaque */

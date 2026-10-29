@@ -327,5 +327,17 @@
         "confidence": "guess"
       }
     ]
+  },
+  "cg_t": {
+    "size": "0x6B100",
+    "evidence": "0x116D30 walks 4 cg_t at cg_ptr + i*0x6B100 comparing +0x0 to a client num; 0x155F7C/0x46F6C8/0x47032C index the 0x5D0 clientinfo array with +0x0",
+    "fields": [
+      {
+        "offset": "0x00",
+        "type": "int",
+        "name": "clientNum",
+        "confidence": "confirmed"
+      }
+    ]
   }
 }

@@ -151,3 +151,12 @@ _Static_assert(offsetof(struct msg_t, readcount) == 0x1C, "msg_t.readcount");
 _Static_assert(offsetof(struct msg_t, bit) == 0x20, "msg_t.bit");
 _Static_assert(offsetof(struct msg_t, lastEntityRef) == 0x24, "msg_t.lastEntityRef");
 _Static_assert(sizeof(struct msg_t) == 0x28, "sizeof msg_t");
+
+/* 0x116D30 walks 4 cg_t at cg_ptr + i*0x6B100 comparing +0x0 to a client num; 0x155F7C/0x46F6C8/0x47032C index the 0x5D0 clientinfo array with +0x0 */
+struct cg_t
+{
+    int clientNum; /* +0x0 confirmed */
+    char _pad0004[0x6B0FC];
+};
+_Static_assert(offsetof(struct cg_t, clientNum) == 0x0, "cg_t.clientNum");
+_Static_assert(sizeof(struct cg_t) == 0x6B100, "sizeof cg_t");
