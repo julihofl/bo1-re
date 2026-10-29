@@ -54,6 +54,12 @@ static const opd_t bo1_opd_BG_GetWeaponDef = { 0x000C0A98u, BO1_TOC };
 typedef void (*CG_GameMessage_t)(int localClientNum, const char *msg);
 static const opd_t bo1_opd_CG_GameMessage = { 0x00113550u, BO1_TOC };
 
+/* likely: compares clientNum with cg_t.clientNum (+0x0) of the 4 local cg_t (stride 0x6B100), returns 0..3 or -1 */
+#define BO1_ADDR_CG_LocalClientForClientNum 0x00116D30u
+#define BO1_GAME_OPD_CG_LocalClientForClientNum 0x00B46A60u /* the game's own descriptor */
+typedef int (*CG_LocalClientForClientNum_t)(int clientNum);
+static const opd_t bo1_opd_CG_LocalClientForClientNum = { 0x00116D30u, BO1_TOC };
+
 /* guess: registers dev fonts and "white" */
 #define BO1_ADDR_CG_RegisterGraphics 0x0011C6D8u
 typedef void (*CG_RegisterGraphics_t)(int localClientNum, const char *mapname);

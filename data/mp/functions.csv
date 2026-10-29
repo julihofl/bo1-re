@@ -9,6 +9,7 @@ addr,opd,name,prototype,subsystem,confidence,notes
 0x0007B720,,BG_GetPerkIndexForName,unsigned int BG_GetPerkIndexForName(const char *perkName),bgame,guess,forum list
 0x000C0A98,,BG_GetWeaponDef,WeaponDef *BG_GetWeaponDef(unsigned int weaponIndex),bgame,guess,forum list
 0x00113550,,CG_GameMessage,"void CG_GameMessage(int localClientNum, const char *msg)",cgame,guess,forum list
+0x00116D30,0x00B46A60,CG_LocalClientForClientNum,int CG_LocalClientForClientNum(int clientNum),cgame,likely,"compares clientNum with cg_t.clientNum (+0x0) of the 4 local cg_t (stride 0x6B100), returns 0..3 or -1"
 0x0011C6D8,,CG_RegisterGraphics,"void CG_RegisterGraphics(int localClientNum, const char *mapname)",cgame,guess,"registers dev fonts and ""white"""
 0x001448B0,,CScr_GetMethod,"BuiltinMethod CScr_GetMethod(const char **pName, int *type)",csc,likely,scans csc_methods (0xB311D8)
 0x00144AC0,,CScr_GetFunction,"BuiltinFunction CScr_GetFunction(const char **pName, int *type)",csc,likely,scans csc_functions (0xB5A2F4)
