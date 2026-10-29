@@ -108,6 +108,54 @@ def gen_offsets(globs, dvars):
     return "\n".join(out) + "\n"
 
 
+DDL_TYPES = {0: "byte", 1: "short", 2: "uint", 3: "uint64", 4: "float", 5: "string", 6: "struct"}  # inferred from widths
+
+
+def parse_ddl(path):
+    """stats_ddl.txt -> (fields, enums); fields keyed by path without 'root.'."""
+    fields, enums, cur = {}, [], None
+    for line in path.read_text().splitlines():
+        if line.startswith("root."):
+            p, *kv = line.split()
+            fields[p[5:]] = {k: int(v, 0) for k, v in (x.split("=") for x in kv)}
+        elif line.startswith("enum "):
+            cur = []
+            enums.append(cur)
+        elif line.strip() and cur is not None:
+            cur.append(line.split()[1])
+    return fields, enums
+
+
+def gen_stats(stats, data):
+    fields, enums = parse_ddl(data / stats["ddl"])
+    data_ofs = int(stats["data_offset"], 16)
+    out = [HEADER.format(t=TARGET), "#pragma once", '#include "offsets.h"', "",
+           "/* Stats DDL (ddl_mp/stats.ddl) member offsets, relative to the DDL data of one buffer.",
+           " * Bit fields are packed little-endian (DDL accessors use ldbrx/stdbrx): a byte-aligned",
+           " * int member is stored byte-swapped relative to a PPU load. Array members give element 0. */",
+           f"#define BO1_STATS_STRIDE 0x{int(stats['stride'], 16):X}u /* per controller */",
+           f"#define BO1_STATS_BUFFER_SIZE 0x{int(stats['buffer_size'], 16):X}u",
+           f"#define BO1_STATS_DATA 0x{data_ofs:X}u /* buffer header before the DDL data */",
+           f"#define BO1_STATS_ADDR(controller, ofs) (BO1_{stats['buffers']} + (controller) * BO1_STATS_STRIDE"
+           " + BO1_STATS_DATA + (ofs))", ""]
+    for path, f in fields.items():
+        typ = DDL_TYPES.get(f["type"], f"type{f['type']}")
+        arr = f"[{f['array']}]" if f["array"] > 1 else ""
+        out.append(f"#define BO1_STATS_{ident(path)} 0x{f['byte']:04X}u /* bit {f['bit']}, "
+                   f"{f['element']} bits {typ}{arr} */")
+    # Enum-indexed scalar arrays that are byte-aligned get one macro per entry.
+    for path, f in fields.items():
+        if f["type"] == 6 or f["array"] < 2 or f["enum"] < 0 or f["bit"] or f["element"] % 8:
+            continue
+        names = enums[f["enum"]]
+        if len(names) != f["array"]:
+            continue
+        out += ["", f"/* {path}[{f['array']}] by enum {f['enum']} */"]
+        out += [f"#define BO1_STATS_{ident(path)}_{ident(n)} 0x{f['byte'] + i * f['element'] // 8:04X}u"
+                for i, n in enumerate(names)]
+    return "\n".join(out) + "\n"
+
+
 def collect_type_names(funcs, structs):
     known = set(structs) | COMMON_TYPES | {"DvarValue"}
     found = set()
@@ -179,8 +227,12 @@ def main():
     (out_dir / "types.h").write_text(gen_types(funcs, structs))
     (out_dir / "structs.h").write_text(gen_structs(structs))
     (out_dir / "functions.h").write_text(gen_functions(funcs))
+    headers = ["offsets.h", "types.h", "structs.h", "functions.h"]
+    if t.stats:
+        (out_dir / "stats.h").write_text(gen_stats(t.stats, data))
+        headers.append("stats.h")
     (out_dir / f"bo1_{TARGET}.h").write_text(HEADER.format(t=TARGET) + "#pragma once\n" + "".join(
-        f'#include "{h}"\n' for h in ("offsets.h", "types.h", "structs.h", "functions.h")))
+        f'#include "{h}"\n' for h in headers))
     print(f"headers written to {out_dir}")
 
 

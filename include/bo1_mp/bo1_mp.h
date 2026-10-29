@@ -4,3 +4,4 @@
 #include "types.h"
 #include "structs.h"
 #include "functions.h"
+#include "stats.h"

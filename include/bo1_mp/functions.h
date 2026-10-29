@@ -662,6 +662,31 @@ static const opd_t bo1_opd_Scr_AddFloat = { 0x005DF630u, BO1_TOC };
 typedef void (*Scr_AddEntity_t)(gentity_t *ent);
 static const opd_t bo1_opd_Scr_AddEntity = { 0x005DF800u, BO1_TOC };
 
+/* likely: called once per cached state after DDL_Load in 0x6A0208, before DDL_MoveToName */
+#define BO1_ADDR_DDL_GetRootState 0x005E50B8u
+typedef void (*DDL_GetRootState_t)(ddlState_t *state, ddlDef_t *def);
+static const opd_t bo1_opd_DDL_GetRootState = { 0x005E50B8u, BO1_TOC };
+
+/* likely: Cmd_statSetByName_f passes statsDDLRootState, depth 2, {"PlayerStatsList", name}; loops DDL_MoveToName */
+#define BO1_ADDR_DDL_MoveToPath 0x005E55C8u
+typedef int (*DDL_MoveToPath_t)(const ddlState_t *from, ddlState_t *to, int depth, const char **path);
+static const opd_t bo1_opd_DDL_MoveToPath = { 0x005E55C8u, BO1_TOC };
+
+/* likely: loads asset type 0x2A by name and returns the newest version in the def chain (+0x0 version, +0x18 next); called with "ddl_mp/stats.ddl" */
+#define BO1_ADDR_DDL_Load 0x005E5E58u
+typedef ddlDef_t * (*DDL_Load_t)(const char *name);
+static const opd_t bo1_opd_DDL_Load = { 0x005E5E58u, BO1_TOC };
+
+/* likely: checks member min/max, stores value-min at bit (state->offset + 0x140) little-endian (ldbrx/stdbrx), sets buffer[8] |= 1 (dirty); every DDL accessor adds 0x140 bits = 0x28-byte buffer header */
+#define BO1_ADDR_DDL_SetInt 0x005E7330u
+typedef int (*DDL_SetInt_t)(const ddlState_t *state, unsigned int value, void *buffer);
+static const opd_t bo1_opd_DDL_SetInt = { 0x005E7330u, BO1_TOC };
+
+/* likely: called with member names ("CacLoadouts", "emblemstats"); used per path component by DDL_MoveToPath */
+#define BO1_ADDR_DDL_MoveToName 0x005E8CF0u
+typedef int (*DDL_MoveToName_t)(const ddlState_t *from, const char *name, ddlState_t *to);
+static const opd_t bo1_opd_DDL_MoveToName = { 0x005E8CF0u, BO1_TOC };
+
 /* likely: scans actor methods (0xB40390) */
 #define BO1_ADDR_Actor_GetMethod 0x0060EB80u
 typedef BuiltinMethod (*Actor_GetMethod_t)(const char **pName);
@@ -671,6 +696,16 @@ static const opd_t bo1_opd_Actor_GetMethod = { 0x0060EB80u, BO1_TOC };
 #define BO1_ADDR_InspectCmd_Dispatch 0x00650DC0u
 typedef void (*InspectCmd_Dispatch_t)(int controller);
 static const opd_t bo1_opd_InspectCmd_Dispatch = { 0x00650DC0u, BO1_TOC };
+
+/* likely: switch on kind 0..5 over statsBuffers + controller*0x26694 (kind 4: global 0x2137C40); kind 0 switches to the basic-training copy while xblive_basictraining */
+#define BO1_ADDR_LiveStats_GetStatsBuffer 0x006B1E98u
+typedef char * (*LiveStats_GetStatsBuffer_t)(int controller, int kind, int check);
+static const opd_t bo1_opd_LiveStats_GetStatsBuffer = { 0x006B1E98u, BO1_TOC };
+
+/* guess: thin wrapper of LiveStats_GetStatsBuffer; Cmd_statSetByName_f calls it with (controller, 0, 1) */
+#define BO1_ADDR_LiveStats_GetStatsBufferPtr 0x006B2400u
+typedef char * (*LiveStats_GetStatsBufferPtr_t)(int controller, int kind, int check);
+static const opd_t bo1_opd_LiveStats_GetStatsBufferPtr = { 0x006B2400u, BO1_TOC };
 
 /* guess: forum list */
 #define BO1_ADDR_R_RegisterFont 0x00734350u

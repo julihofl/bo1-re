@@ -18,6 +18,8 @@ typedef struct GfxCmdDrawText2D GfxCmdDrawText2D; /* opaque */
 typedef struct Material Material; /* opaque */
 typedef struct WeaponDef WeaponDef; /* opaque */
 typedef struct client_t client_t; /* opaque */
+typedef struct ddlDef_t ddlDef_t; /* opaque */
+typedef struct ddlState_t ddlState_t; /* opaque */
 typedef struct netadr_t netadr_t; /* opaque */
 typedef struct netchan_t netchan_t; /* opaque */
 typedef struct playerState_t playerState_t; /* opaque */

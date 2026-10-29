@@ -39,6 +39,7 @@ build/, analysis/   local outputs (ignored)
 | `builtins.csv` | 1519 | 1696 | GSC/CSC functions & methods, spawn functions, UI menu-script commands, net handlers, inspect/terminal commands |
 | `imports.csv` | 319 | 277 | every PRX import (library, NID, resolved name, stub) — 100% resolved |
 | `ghidra_functions.txt` | 11149 | 14888 | Ghidra's own function starts (merged into the scanner) |
+| `stats_ddl.txt` | 1053 | – | stats DDL layout (`ddl_mp/stats.ddl`): byte/bit offset into the DDL data, width, type, array, enum; plus 13 enums. Dumped at runtime on a PS3 running v1.13 (the DDL lives in the fastfiles, not the EBOOT); generated into `include/bo1_mp/stats.h` (buffer layout in `target.json` `stats`) |
 
 `data/cross/mp_sp_zm.csv` (8755 pairs) maps MP functions to SP/ZM ones with the match method
 (`name`, `exact`, `strings`, `callee_exact`, `callee` — strongest first). SP/ZM entries

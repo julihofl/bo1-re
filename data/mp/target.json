@@ -170,5 +170,13 @@
    "0xB34A94",
    "VehicleCmd_"
   ]
- ]
+ ],
+ "_stats": "stats DDL buffers (LiveStats_GetStatsBuffer): statsBuffers + controller*stride; DDL accessors add data_offset (0x140 bits) to every member offset",
+ "stats": {
+  "ddl": "stats_ddl.txt",
+  "buffers": "statsBuffers",
+  "stride": "0x26694",
+  "buffer_size": "0x996D",
+  "data_offset": "0x28"
+ }
 }

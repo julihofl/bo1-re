@@ -20,6 +20,9 @@
 #define BO1_s_sortedDvars 0x019611BCu /* dvar_t *[4096] (confirmed) */
 #define BO1_g_dvarsSorted 0x019651BCu /* bool (likely) */
 #define BO1_scr_errorMessage 0x01EA05C0u /* char[1024] (likely) */
+#define BO1_statsDDLDef 0x02028CB4u /* ddlDef_t * (likely) */
+#define BO1_statsDDLRootState 0x02028CB8u /* ddlState_t (likely) */
+#define BO1_statsBuffers 0x0208B600u /* char[0x26694] (confirmed) */
 
 /* dvar_t * globals filled by the Dvar_Register* call sites (first registration wins). */
 #define BO1_DVAR_acousticSpikeMaxRange 0x00CE4B94u /* float */

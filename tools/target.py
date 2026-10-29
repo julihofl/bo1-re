@@ -54,6 +54,11 @@ class Target:
         return [(hexint(a), hexint(b), prefix) for a, b, prefix in self.config.get("builtin_prefix_ranges", [])]
 
     @property
+    def stats(self) -> dict:
+        """Stats DDL buffer layout ({} when the target has none)."""
+        return self.config.get("stats", {})
+
+    @property
     def dvar_register_funcs(self) -> dict:
         """dvar type -> Dvar_Register<Type> address."""
         return {t: hexint(a) for t, a in self.config.get("dvar_register_funcs", {}).items()}

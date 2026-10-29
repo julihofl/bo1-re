@@ -110,6 +110,24 @@ what to do about it.
     at `gclient+0x271` — the real fields are `+0x2914`/`+0x28FC`. `Dvar_GetBool` takes a
     `dvar_t *`, not a name (forum prototype wrong); `Dvar_GetString` does take a name.
 
+## Stats (MP)
+
+32. **Stats buffer from `statSetByName`.** `Cmd_statSetByName_f` gets its buffer from
+    `LiveStats_GetStatsBuffer(ctrl, kind, check)` (`0x6B1E98`), a switch over six kinds:
+    `statsBuffers` (`0x208B600`) + `ctrl * 0x26694` holds four `0x996D`-byte buffers at `+0`
+    (kind 0/1, the live stats), `+0x996D` (2), `+0x132DA` (3) and `+0x1CC47` (5, also returned for
+    kind 0 while `xblive_basictraining` is set); kind 4 is the global `0x2137C40`. It then calls
+    `DDL_MoveToPath(&statsDDLRootState, …, 2, {"PlayerStatsList", name})` and `DDL_SetInt`.
+33. **DDL data starts at buffer `+0x28`.** Every DDL accessor in `0x5E4…–0x5E7…` adds `0x140`
+    bits to the member offset, and `DDL_SetInt` sets `buffer[8] |= 1` (dirty) — a 0x28-byte header.
+    Fields are read/written with `ldbrx`/`stdbrx`: bit-packed **little-endian**, so a 32-bit stat
+    is byte-swapped relative to a plain PPU load. `kills` (`playerstatslist[105]`, DDL `0x8E01`)
+    is at `0x208B600 + 0x28 + 0x8E01 = 0x2094429` — inside the forum's `0x2094xxx` range.
+    Offsets from `data/mp/stats_ddl.txt` (dumped on a PS3 running v1.13, so it matches this
+    EBOOT) are generated into `include/bo1_mp/stats.h`
+    (`BO1_STATS_ADDR(ctrl, BO1_STATS_playerstatslist_kills)`). The DDL (`0x9824` bytes incl.
+    header) fits the `0x996D` buffer.
+
 ## Open questions
 
 - Meaning of dvar flags `0x100`, `0x1000`, `0x2000`; field at `dvar_t+0x48`.
@@ -119,7 +137,8 @@ what to do about it.
 - SP/ZM: `G_InitGame` not located (MP anchor string is not referenced the same way);
   `CL_RegisterFont`, `Netchan_Transmit`, `SV_BuildClientSnapshot`, `SV_GetGuid`
   not matched yet.
-- Stats: forum offsets `0x2094xxx` (kills, prestige…) lie in MP bss, but the layout comes from
-  `ddl_mp/stats.ddl` in the fastfiles — not verifiable from the EBOOT alone.
+- Stats: meaning of stats buffer kinds 2–4 (`stats_archive.ddl`? other-player stats?). The
+  address chain (`0x2094429` = `kills`) is static only — confirm once at runtime with
+  `statSetByName kills 1234` (expect bytes `D2 04 00 00`).
 - Inspect commands: who sends them (Demonware task, server command?) and what `handler2` does.
 - SP/ZM `level_locals_t` ends where `g_entities` begins (`level + 0x585C`) — verify.

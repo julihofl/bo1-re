@@ -130,8 +130,15 @@ addr,opd,name,prototype,subsystem,confidence,notes
 0x005DF2A0,,Scr_AddInt,"void Scr_AddInt(int value, scriptInstance_t inst)",gsc,confirmed,tail of getdvarint/gettime/randomint/getentitynumber
 0x005DF630,,Scr_AddFloat,"void Scr_AddFloat(float value, scriptInstance_t inst)",gsc,confirmed,tail of getdvarfloat/distance/abs
 0x005DF800,,Scr_AddEntity,void Scr_AddEntity(gentity_t *ent),gsc,confirmed,tail of getent; per element in getentarray
+0x005E50B8,,DDL_GetRootState,"void DDL_GetRootState(ddlState_t *state, ddlDef_t *def)",ddl,likely,"called once per cached state after DDL_Load in 0x6A0208, before DDL_MoveToName"
+0x005E55C8,,DDL_MoveToPath,"int DDL_MoveToPath(const ddlState_t *from, ddlState_t *to, int depth, const char **path)",ddl,likely,"Cmd_statSetByName_f passes statsDDLRootState, depth 2, {""PlayerStatsList"", name}; loops DDL_MoveToName"
+0x005E5E58,,DDL_Load,ddlDef_t *DDL_Load(const char *name),ddl,likely,"loads asset type 0x2A by name and returns the newest version in the def chain (+0x0 version, +0x18 next); called with ""ddl_mp/stats.ddl"""
+0x005E7330,,DDL_SetInt,"int DDL_SetInt(const ddlState_t *state, unsigned int value, void *buffer)",ddl,likely,"checks member min/max, stores value-min at bit (state->offset + 0x140) little-endian (ldbrx/stdbrx), sets buffer[8] |= 1 (dirty); every DDL accessor adds 0x140 bits = 0x28-byte buffer header"
+0x005E8CF0,,DDL_MoveToName,"int DDL_MoveToName(const ddlState_t *from, const char *name, ddlState_t *to)",ddl,likely,"called with member names (""CacLoadouts"", ""emblemstats""); used per path component by DDL_MoveToPath"
 0x0060EB80,,Actor_GetMethod,BuiltinMethod Actor_GetMethod(const char **pName),gsc,likely,scans actor methods (0xB40390)
 0x00650DC0,,InspectCmd_Dispatch,void InspectCmd_Dispatch(int controller),net,guess,looks up remote_inspect_commands (peek/checksum/procaddr/section/dvar/dir/upload/mount) by name; per-controller online frame
+0x006B1E98,,LiveStats_GetStatsBuffer,"char *LiveStats_GetStatsBuffer(int controller, int kind, int check)",live,likely,switch on kind 0..5 over statsBuffers + controller*0x26694 (kind 4: global 0x2137C40); kind 0 switches to the basic-training copy while xblive_basictraining
+0x006B2400,,LiveStats_GetStatsBufferPtr,"char *LiveStats_GetStatsBufferPtr(int controller, int kind, int check)",live,guess,"thin wrapper of LiveStats_GetStatsBuffer; Cmd_statSetByName_f calls it with (controller, 0, 1)"
 0x00734350,,R_RegisterFont,"Font_s *R_RegisterFont(const char *name, int imageTrack)",render,guess,forum list
 0x00745440,,Material_Register,"Material *Material_Register(const char *name, int imageTrack)",render,likely,"DB_FindXAssetHeader(ASSET_TYPE_MATERIAL=6, name); imageTrack unused; Material_RegisterHandle adds the empty-name check"
 0x007458D8,,Material_RegisterHandle,"Material *Material_RegisterHandle(const char *name, int imageTrack)",render,confirmed,"""white"" in UI and CG asset setup; 206 call sites with material names"
